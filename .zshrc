@@ -121,6 +121,8 @@ alias gs='git status'
 alias gp='git push'
 alias ga='git add'
 alias fzfnvim='nvim $(fzf -m --preview="bat --color=always {}")'
+alias lzg='lazygit'
+alias lzc='lazycommit'
 
 # pnpm
 export PNPM_HOME="/home/karthik/.local/share/pnpm"

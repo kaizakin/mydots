@@ -131,3 +131,12 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 # pnpm end
+
+# rust
+export RUST_HOME="$HOME/.cargo/env"
+case ":$PATH:" in
+  *":$RUST_HOME:"*) ;;
+  *) export PATH="$RUST_HOME:$PATH" ;;
+esac
+# rust end
+

@@ -124,6 +124,7 @@ alias fzfnvim='nvim $(fzf -m --preview="bat --color=always {}")'
 alias lzg='lazygit'
 alias lzc='lazycommit'
 alias kittyconf='cd ~/dotfiles/kitty/.config/kitty/ && vim kitty.conf'
+alias nvimconf='nvim ~/.config/nvim/'
 
 # pnpm
 export PNPM_HOME="/home/karthik/.local/share/pnpm"

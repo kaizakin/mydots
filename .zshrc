@@ -123,6 +123,7 @@ alias ga='git add'
 alias fzfnvim='nvim $(fzf -m --preview="bat --color=always {}")'
 alias lzg='lazygit'
 alias lzc='lazycommit'
+alias kittyconf='cd ~/dotfiles/kitty/.config/kitty/ && vim kitty.conf'
 
 # pnpm
 export PNPM_HOME="/home/karthik/.local/share/pnpm"

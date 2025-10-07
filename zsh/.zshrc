@@ -142,3 +142,9 @@ case ":$PATH:" in
 esac
 # rust end
 
+
+
+# solana
+export PATH="/home/karthik/.local/share/solana/install/active_release/bin:$PATH"
+
+

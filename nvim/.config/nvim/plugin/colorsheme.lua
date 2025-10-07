@@ -6,7 +6,6 @@ return {
     config = function()
       require("catppuccin").setup({
         flavour = "mocha",
-        transparent_background = true,
         float = {
           transparent = false, -- makes floating windows opaque
           solid = true, -- enables solid background for floats

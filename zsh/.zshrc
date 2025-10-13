@@ -54,7 +54,7 @@ DISABLE_LS_COLORS="true"
 # You can also set it to another string to have that shown instead of the default red dots.
 # e.g. COMPLETION_WAITING_DOTS="%F{yellow}waiting...%f"
 # Caution: this setting can cause issues with multiline prompts in zsh < 5.7.1 (see #5765)
-COMPLETION_WAITING_DOTS="%F{yellow}waiting...%f"
+COMPLETION_WAITING_DOTS="%F{yellow}...%f"
 
 # Uncomment the following line if you want to disable marking untracked files
 # under VCS as dirty. This makes repository status check for large repositories
@@ -79,7 +79,6 @@ COMPLETION_WAITING_DOTS="%F{yellow}waiting...%f"
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(git)
 
-ZSH_THEME="powerlevel10k/powerlevel10k"
 source $ZSH/oh-my-zsh.sh
 
 # User configuration
@@ -112,18 +111,21 @@ source $ZSH/oh-my-zsh.sh
 alias zshconfig="vim ~/.zshrc"
 alias ohmyzsh="vim ~/.oh-my-zsh"
 
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-
-#git aliases custom made by karthik
+# git aliases custom made by karthik
 alias gcm='git commit -m'
 alias gs='git status'
 alias gp='git push'
 alias ga='git add'
+
+# fzf and open that in nvim 
 alias fzfnvim='nvim $(fzf -m --preview="bat --color=always {}")'
+
+# tools
 alias lzg='lazygit'
 alias lzc='lazycommit'
-alias kittyconf='cd ~/dotfiles/kitty/.config/kitty/ && vim kitty.conf'
+
+# config files
+alias kittyconf='vim ~/.config/kitty/kitty.conf'
 alias nvimconf='nvim ~/.config/nvim/'
 
 # pnpm
@@ -133,18 +135,4 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 # pnpm end
-
-# rust
-export RUST_HOME="$HOME/.cargo/env"
-case ":$PATH:" in
-  *":$RUST_HOME:"*) ;;
-  *) export PATH="$RUST_HOME:$PATH" ;;
-esac
-# rust end
-
-
-
-# solana
-export PATH="/home/karthik/.local/share/solana/install/active_release/bin:$PATH"
-
 

@@ -101,6 +101,11 @@ autoload -U compinit && compinit
 # this needs to be placed immediately next to compinit initialization
 zinit cdreplay -q
 
+# install oh-my-posh using curl
+# add oh-my-posh to zsh add the installation directory to path before sourcing it
+export PATH=$PATH:/home/karthik/.local/bin
+eval "$(oh-my-posh init zsh)"
+
 # Uncomment the following line to display red dots whilst waiting for completion.
 # You can also set it to another string to have that shown instead of the default red dots.
 # e.g. COMPLETION_WAITING_DOTS="%F{yellow}waiting...%f"

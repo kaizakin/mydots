@@ -17,9 +17,9 @@ final_space = true
   background = 'transparent'
 
 [transient_prompt]
-  template = '<p:yellow,transparent></><,p:yellow> {{ .Folder }} </><p:yellow,transparent></> '
-  foreground = 'p:black'
-  background = 'transparent'
+ background = "transparent"
+ foreground = "#ffffff"
+ template = "{{ .Shell }}> "
 
 [upgrade]
   source = 'cdn'

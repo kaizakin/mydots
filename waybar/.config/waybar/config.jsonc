@@ -58,7 +58,7 @@
   },
   "clock": {
     "format": "{:L%A %I:%M %p}",
-    "format-alt": "{:L%d %B W%V %Y}",
+    "format-alt": "{:L%d %B %Y}",
     "tooltip": false,
     "on-click-right": "omarchy-cmd-tzupdate"
   },

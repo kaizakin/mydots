@@ -88,8 +88,13 @@ alias ls='ls --color'
 # add colors to the completions as well
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 
+
 # add zoxide to zsh
-eval "$(zoxide init --cmd cd zsh)"
+eval "$(zoxide init zsh)"
+
+# uncomment this line to alias zoxide to cd if you cannot overcome your muscle memory.
+# eval "$(zoxide init --cmd cd zsh)"
+
 # enable previews to work with zoxide as well
 zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color $realpath'
 
@@ -148,4 +153,3 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 # pnpm end
-

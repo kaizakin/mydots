@@ -146,6 +146,9 @@ alias kittyconf='vim ~/.config/kitty/kitty.conf'
 alias nvimconf='nvim ~/.config/nvim/'
 alias ompconf='vim ~/.config/ohmyposh/zen.toml'
 
+# add dotfiles folder alias
+alias dots=z ~/mydots/
+
 # pnpm
 export PNPM_HOME="/home/karthik/.local/share/pnpm"
 case ":$PATH:" in

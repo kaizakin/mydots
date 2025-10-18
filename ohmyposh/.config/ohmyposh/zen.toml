@@ -23,7 +23,6 @@ final_space = true
 [transient_prompt]
  background = "transparent"
  foreground = "#ffffff"
- template = "{{ .Shell }}> "
 
 [upgrade]
   source = 'cdn'

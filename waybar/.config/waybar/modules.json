@@ -49,7 +49,7 @@
         "on-click": "walker --theme menus -m menus:system --width 150 --minheight 1 --maxheight 600"
     },
     "clock": {
-        "format": "{:%A %H:%M}",
+        "format": "{:%A %I:%M %p}",
         "format-alt": "{:%d %B %Y}",
         "tooltip": false
     },

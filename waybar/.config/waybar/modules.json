@@ -1,148 +1,148 @@
 {
-    "hyprland/workspaces": {
-        "on-scroll-up": "hyprctl dispatch workspace r-1",
-        "on-scroll-down": "hyprctl dispatch workspace r+1",
-        "on-click": "activate",
-        "active-only": false,
-        "all-outputs": true,
-        "format": "{}",
-        "format-icons": {
-            "urgent": "",
-            "active": "",
-            "default": ""
-        },
-        "persistent-workspaces": {
-            "*": 5
-        }
+  "hyprland/workspaces": {
+    "on-scroll-up": "hyprctl dispatch workspace r-1",
+    "on-scroll-down": "hyprctl dispatch workspace r+1",
+    "on-click": "activate",
+    "active-only": false,
+    "all-outputs": true,
+    "format": "{}",
+    "format-icons": {
+      "urgent": "",
+      "active": "",
+      "default": ""
     },
-    "custom/updates": {
-        "format": " {}",
-        "escape": true,
-        "return-type": "json",
-        "exec": "update-check",
-        "interval": 1800,
-        "signal": 1,
-        "hide-empty-text": true,
-        "on-click": "ghostty --class=local.floating -e update-perform"
-    },
-    "custom/hypridle": {
-        "format": "",
-        "return-type": "json",
-        "escape": true,
-        "exec-on-event": true,
-        "interval": 60,
-        "exec": "hypridle-toggle status",
-        "on-click": "hypridle-toggle toggle"
-    },
-    "custom/music": {
-        "format": "  {}",
-        "escape": true,
-        "interval": 5,
-        "tooltip": false,
-        "exec": "playerctl metadata --format='{{ title }} - {{artist}}'",
-        "on-click": "playerctl play-pause",
-        "max-length": 50
-    },
-    "custom/exit": {
-        "format": "",
-        "tooltip-format": "Exit menu",
-        "on-click": "walker --theme menus -m menus:system --width 150 --minheight 1 --maxheight 600"
-    },
-    "clock": {
-        "format": "{:%A %I:%M %p}",
-        "format-alt": "{:%d %B %Y}",
-        "tooltip": false
-    },
-    "cpu": {
-        "interval": 5,
-        "format": "",
-        "on-click": "ghostty -e btop"
-    },
-    "pulseaudio": {
-        "scroll-step": 1,
-        "format": "{icon}",
-        "on-click": "ghostty --class=local.wiremix -e wiremix",
-        "on-click-right": "pamixer -t",
-        "tooltip-format": "Playing at {volume}%",
-        "format-muted": "",
-        "format-icons": {
-            "default": [
-                "",
-                "",
-                " "
-            ]
-        }
-    },
-    "bluetooth": {
-        "format": "",
-        "format-disabled": "󰂲",
-        "format-connected": "",
-        "tooltip-format": "Devices connected: {num_connections}",
-        "on-click": "ghostty --class=local.bluetui -e bluetui"
-    },
-    "battery": {
-        "format": "{capacity}% {icon}",
-        "format-discharging": "{capacity}% {icon}",
-        "format-charging": "{capacity}% ",
-        "format-plugged": "",
-        "format-icons": {
-            "charging": [
-                "󰢜",
-                "󰂆",
-                "󰂇",
-                "󰂈",
-                "󰢝",
-                "󰂉",
-                "󰢞",
-                "󰂊",
-                "󰂋",
-                "󰂅"
-            ],
-            "default": [
-                "󰁺",
-                "󰁻",
-                "󰁼",
-                "󰁽",
-                "󰁾",
-                "󰁿",
-                "󰂀",
-                "󰂁",
-                "󰂂",
-                "󰁹"
-            ]
-        },
-        "format-full": "󰂅",
-        "tooltip-format-discharging": "{power:>1.0f}W↓ {capacity}%",
-        "tooltip-format-charging": "{power:>1.0f}W↑ {capacity}%",
-        "on-click": "power-profile --select",
-        "interval": 5,
-        "states": {
-            "warning": 20,
-            "critical": 10
-        }
-    },
-    "network": {
-        "format-icons": [
-            "󰤯",
-            "󰤟",
-            "󰤢",
-            "󰤥",
-            "󰤨"
-        ],
-        "format": "{icon}",
-        "format-wifi": "{icon}",
-        "format-ethernet": "󰀂",
-        "format-disconnected": "󰤮",
-        "tooltip-format-wifi": "{essid} ({frequency} GHz)\n⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
-        "tooltip-format-ethernet": "⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
-        "tooltip-format-disconnected": "Disconnected",
-        "interval": 3,
-        "spacing": 1,
-        "on-click": "ghostty --class=local.impala -e impala"
-    },
-    "custom/filemanager": {
-        "format": "",
-        "on-click": "nautilus",
-        "tooltip-format": "Open Filemanager"
+    "persistent-workspaces": {
+      "*": 5
     }
+  },
+  "custom/updates": {
+    "format": " {}",
+    "escape": true,
+    "return-type": "text",
+    "exec": "checkupdates | wc -l",
+    "interval": 1800,
+    "signal": 1,
+    "hide-empty-text": false,
+    "on-click": "ghostty --class=local.floating -e sudo pacman -Syu"
+  },
+  "custom/hypridle": {
+    "format": "",
+    "return-type": "json",
+    "escape": true,
+    "exec-on-event": true,
+    "interval": 60,
+    "exec": "hypridle-toggle status",
+    "on-click": "hypridle-toggle toggle"
+  },
+  "custom/music": {
+    "format": "  {}",
+    "escape": true,
+    "interval": 5,
+    "tooltip": false,
+    "exec": "playerctl metadata --format='{{ title }} - {{artist}}'",
+    "on-click": "playerctl play-pause",
+    "max-length": 50
+  },
+  "custom/exit": {
+    "format": "",
+    "tooltip-format": "Exit menu",
+    "on-click": "walker --theme menus -m menus:system --width 150 --minheight 1 --maxheight 600"
+  },
+  "clock": {
+    "format": "{:%A %I:%M %p}",
+    "format-alt": "{:%d %B %Y}",
+    "tooltip": false
+  },
+  "cpu": {
+    "interval": 5,
+    "format": "",
+    "on-click": "ghostty -e btop"
+  },
+  "pulseaudio": {
+    "scroll-step": 1,
+    "format": "{icon}",
+    "on-click": "ghostty --class=local.wiremix -e wiremix",
+    "on-click-right": "pamixer -t",
+    "tooltip-format": "Playing at {volume}%",
+    "format-muted": "",
+    "format-icons": {
+      "default": [
+        "",
+        "",
+        " "
+      ]
+    }
+  },
+  "bluetooth": {
+    "format": "",
+    "format-disabled": "󰂲",
+    "format-connected": "",
+    "tooltip-format": "Devices connected: {num_connections}",
+    "on-click": "ghostty --class=local.bluetui -e bluetui"
+  },
+  "battery": {
+    "format": "{capacity}% {icon}",
+    "format-discharging": "{capacity}% {icon}",
+    "format-charging": "{capacity}% ",
+    "format-plugged": "",
+    "format-icons": {
+      "charging": [
+        "󰢜",
+        "󰂆",
+        "󰂇",
+        "󰂈",
+        "󰢝",
+        "󰂉",
+        "󰢞",
+        "󰂊",
+        "󰂋",
+        "󰂅"
+      ],
+      "default": [
+        "󰁺",
+        "󰁻",
+        "󰁼",
+        "󰁽",
+        "󰁾",
+        "󰁿",
+        "󰂀",
+        "󰂁",
+        "󰂂",
+        "󰁹"
+      ]
+    },
+    "format-full": "󰂅",
+    "tooltip-format-discharging": "{power:>1.0f}W↓ {capacity}%",
+    "tooltip-format-charging": "{power:>1.0f}W↑ {capacity}%",
+    "on-click": "power-profile --select",
+    "interval": 5,
+    "states": {
+      "warning": 20,
+      "critical": 10
+    }
+  },
+  "network": {
+    "format-icons": [
+      "󰤯",
+      "󰤟",
+      "󰤢",
+      "󰤥",
+      "󰤨"
+    ],
+    "format": "{icon}",
+    "format-wifi": "{icon}",
+    "format-ethernet": "󰀂",
+    "format-disconnected": "󰤮",
+    "tooltip-format-wifi": "{essid} ({frequency} GHz)\n⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
+    "tooltip-format-ethernet": "⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
+    "tooltip-format-disconnected": "Disconnected",
+    "interval": 3,
+    "spacing": 1,
+    "on-click": "ghostty --class=local.impala -e impala"
+  },
+  "custom/filemanager": {
+    "format": "",
+    "on-click": "nautilus",
+    "tooltip-format": "Open Filemanager"
+  }
 }

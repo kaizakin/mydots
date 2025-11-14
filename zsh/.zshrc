@@ -79,6 +79,11 @@ setopt hist_find_no_dups
 bindkey '^p' history-search-backward
 bindkey '^n' history-search-forward
 
+# jump words using ctrl arrow
+bindkey "\e[1;5C" forward-word
+bindkey "\e[1;5D" backward-word
+
+
 # in-casesensitive auto-completion
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
 
@@ -156,3 +161,6 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 # pnpm end
+
+
+

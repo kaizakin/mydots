@@ -1,0 +1,24 @@
+:root {
+    /* Backgrounds */
+    --background: #1e1e2e;
+    --foreground: #cdd6f4;
+    --border: #313244;
+
+    /* Text */
+    --text: #cdd6f4;
+    --selected-text: #89b4fa;
+
+    /* Error colors */
+    --error_bg_color: #f38ba8;
+    --error_fg_color: #1e1e2e;
+}
+
+@define-color background var(--background);
+@define-color foreground var(--foreground);
+@define-color text var(--text);
+@define-color border var(--border);
+@define-color selected-text var(--selected-text);
+
+@define-color error_bg_color var(--error_bg_color);
+@define-color error_fg_color var(--error_fg_color);
+

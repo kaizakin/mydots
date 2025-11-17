@@ -80,7 +80,7 @@ child {
 
 child:hover .item-box,
 child:selected .item-box {
-  background: darker(alpha(#0f0e0e, 0.5));
+  background: darker(alpha(#FBFBFB, 0.5));
 }
 
 .item-text-box {

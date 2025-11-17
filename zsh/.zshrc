@@ -163,4 +163,4 @@ esac
 # pnpm end
 
 
-
+export PATH="$PATH:$HOME/.local/bin"

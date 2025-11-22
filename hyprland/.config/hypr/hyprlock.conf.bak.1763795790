@@ -27,7 +27,7 @@ source = ~/.config/omarchy/current/theme/hyprlock.conf
 #     font_family = CaskaydiaMono Nerd Font
 #     font_color = $font_color
 
-#     placeholder_text = Enter Password
+#     placeholder_text =   Enter Password 󰈷 
 #     check_color = $check_color
 #     fail_text = <i>$PAMFAIL ($ATTEMPTS)</i>
 
@@ -167,7 +167,7 @@ input-field {
     inner_color = rgb(253, 248, 248)
     font_color = $secondary
     fade_on_empty = true
-    placeholder_text = Enter Password
+    placeholder_text = <i>Password...</i> # Text rendered in the input box when it's empty.
 
     position = 0, 120
     halign = center

@@ -150,6 +150,7 @@ alias lzc='lazycommit'
 alias kittyconf='vim ~/.config/kitty/kitty.conf'
 alias nvimconf='nvim ~/.config/nvim/'
 alias ompconf='vim ~/.config/ohmyposh/zen.toml'
+alias tmuxconf='vim ~/.tmux.conf'
 
 # add dotfiles folder alias
 alias dots='z ~/mydots/'

@@ -4,7 +4,7 @@
   "position": "top",
   "height": 16,
   "include": ["~/.config/waybar/modules.json"],
-  "modules-left": ["custom/omarchy", "clock", "custom/update", "group/expand"],
+  "modules-left": ["custom/omarchy", "clock", "group/expand"],
   "modules-center": ["hyprland/workspaces"],
   "modules-right": [
     "group/tray-expander",
@@ -47,13 +47,6 @@
     "on-click": "omarchy-menu",
     "on-click-right": "xdg-terminal-exec",
     "tooltip-format": "Omarchy Menu\n\nSuper + Alt + Space"
-  },
-  "custom/update": {
-    "format": "",
-    "exec": "omarchy-update-available",
-    "on-click": "omarchy-launch-floating-terminal-with-presentation omarchy-update",
-    "tooltip-format": "Omarchy update available",
-    "interval": 3600
   },
   "group/tray-expander": {
     "orientation": "inherit",

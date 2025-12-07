@@ -87,9 +87,6 @@ bindkey "\e[1;5D" backward-word
 # in-casesensitive auto-completion
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
 
-# enable colors to ls command
-alias ls='ls --color'
-
 # add colors to the completions as well
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 
@@ -146,6 +143,10 @@ alias fzfnvim='nvim $(fzf -m --preview="bat --color=always {}")'
 alias lzg='lazygit'
 alias lzc='lazycommit'
 
+alias ls='eza --icons=auto'
+alias cat='bat'
+
+
 # config files
 alias kittyconf='vim ~/.config/kitty/kitty.conf'
 alias nvimconf='nvim ~/.config/nvim/'
@@ -154,6 +155,9 @@ alias tmuxconf='vim ~/.tmux.conf'
 
 # add dotfiles folder alias
 alias dots='z ~/mydots/'
+
+# lazy aliases
+alias deidocker='sudo systemctl start docker'
 
 # pnpm
 export PNPM_HOME="/home/karthik/.local/share/pnpm"
@@ -165,3 +169,10 @@ esac
 
 
 export PATH="$PATH:$HOME/.local/bin"
+
+# bun completions
+[ -s "/home/karthik/.bun/_bun" ] && source "/home/karthik/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"

@@ -159,6 +159,14 @@ alias dots='z ~/mydots/'
 # lazy aliases
 alias deidocker='sudo systemctl start docker'
 
+# lazy functions
+lazypush() {
+  git add .
+  git commit -m "$*"
+  git push origin main
+}
+
+
 # pnpm
 export PNPM_HOME="/home/karthik/.local/share/pnpm"
 case ":$PATH:" in

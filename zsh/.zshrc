@@ -158,6 +158,7 @@ alias dots='z ~/mydots/'
 
 # lazy aliases
 alias deidocker='sudo systemctl start docker'
+alias resetnetwork='sudo systemctl restart NetworkManager'
 
 # lazy functions
 lazypush() {
@@ -194,3 +195,8 @@ function y() {
 	[ -n "$cwd" ] && [ "$cwd" != "$PWD" ] && builtin cd -- "$cwd"
 	rm -f -- "$tmp"
 }
+
+# Add Go binaries to the system path
+export GOPATH=$HOME/go
+export PATH=$PATH:$GOPATH/bin
+source /usr/share/nvm/init-nvm.sh

@@ -4,7 +4,7 @@
   "position": "top",
   "height": 16,
   "include": ["~/.config/waybar/modules.json"],
-  "modules-left": ["custom/omarchy", "clock", "group/expand"],
+  "modules-left": ["custom/omarchy", "clock", "group/expand", "custom/cava"],
   "modules-center": ["hyprland/workspaces"],
   "modules-right": [
     "group/tray-expander",

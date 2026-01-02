@@ -144,5 +144,10 @@
     "format": "",
     "on-click": "nautilus",
     "tooltip-format": "Open Filemanager"
+  },
+  "custom/cava": {
+    "exec": "~/.config/waybar/bin/waybar-cava",
+    "format": "{}",
+    "restart-interval" : 1
   }
 }

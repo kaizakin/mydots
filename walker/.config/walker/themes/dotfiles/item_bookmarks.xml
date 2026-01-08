@@ -78,5 +78,15 @@
         <property name="yalign">0.5</property>
       </object>
     </child>
+    <child>
+      <object class="GtkBox" id="ItemKeybinds">
+        <style>
+          <class name="item-keybinds"></class>
+        </style>
+        <property name="orientation">horizontal</property>
+        <property name="spacing">6</property>
+        <property name="valign">center</property>
+      </object>
+    </child>
   </object>
 </interface>

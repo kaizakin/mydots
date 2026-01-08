@@ -193,3 +193,6 @@ bookmarks = [
   { action = "change_browser", label = "Change browser", bind = "ctrl b", after = "Nothing" },
   { action = "import", label = "Import", bind = "ctrl i", after = "AsyncClearReload" },
 ]
+[[emergencies]]
+text = "Restart Walker"
+command = "omarchy-restart-walker"

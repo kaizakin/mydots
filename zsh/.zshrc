@@ -167,6 +167,8 @@ lazypush() {
   git push origin main
 }
 
+stty -ixon # stop ctrl + s from freezing terminal so tmux prefix works properly
+
 
 # pnpm
 export PNPM_HOME="/home/karthik/.local/share/pnpm"

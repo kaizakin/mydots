@@ -7,6 +7,7 @@
   "modules-left": ["custom/omarchy", "clock", "group/expand", "custom/cava"],
   "modules-center": ["hyprland/workspaces"],
   "modules-right": [
+    "custom/cpucat",
     "group/tray-expander",
     "custom/updates",
     "pulseaudio",

@@ -149,5 +149,11 @@
     "exec": "~/.config/waybar/bin/waybar-cava",
     "format": "{}",
     "restart-interval" : 1
+  },
+  "custom/cpucat": {
+    "exec":"~/scripts/catloop.sh",
+    "spacing": 1,
+    "format": "{}",
+    "tooltip": true,
   }
 }

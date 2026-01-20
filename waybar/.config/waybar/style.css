@@ -11,7 +11,7 @@ window#waybar {
 
 .modules-left {
   padding: 7px;
-  margin: 10px 0px 2px 10px;
+  margin: 7px 0px 4px 10px;
   border-radius: 10px;
   background: alpha(@background, 0.8);
   box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.6);
@@ -19,15 +19,15 @@ window#waybar {
 
 .modules-center {
   padding: 7px;
-  margin: 10px 0px 2px 0px;
+  margin: 7px 0px 4px 0px;
   border-radius: 10px;
   background: alpha(@background, 0.8);
   box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.6);
 }
 
 .modules-right {
-  padding: 7px;
-  margin: 10px 10px 2px 0px;
+  padding: 3px;
+  margin: 7px 10px 4px 0px;
   border-radius: 10px;
   background: alpha(@background, 0.8);
   box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.6);
@@ -160,4 +160,15 @@ tooltip {
 
 #custom-voxtype.recording {
   color: #a55555;
+}
+
+#custom-cpucat {
+  font-family: "Waycat", monospace;
+  font-size: 17px;
+  font-weight: bold;
+  color: white;
+  padding-left: 6px;
+  padding-right: 13px;
+  padding-bottom: 0px;
+  padding-top: 0px;
 }

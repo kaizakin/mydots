@@ -151,7 +151,7 @@
     "restart-interval" : 1
   },
   "custom/cpucat": {
-    "exec":"~/scripts/catloop.sh",
+    "exec":"~/mydots/waybar/.config/waybar/scripts/catloop",
     "spacing": 1,
     "format": "{}",
     "tooltip": true,

@@ -159,6 +159,7 @@ alias dots='z ~/mydots/'
 # lazy aliases
 alias deidocker='sudo systemctl start docker'
 alias resetnetwork='sudo systemctl restart NetworkManager'
+alias k='kubectl'
 
 # lazy functions
 lazypush() {

@@ -94,6 +94,9 @@ zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 # add zoxide to zsh
 eval "$(zoxide init zsh)"
 
+# homebrew
+eval "$(brew shellenv)"
+
 # uncomment this line to alias zoxide to cd if you cannot overcome your muscle memory.
 # eval "$(zoxide init --cmd cd zsh)"
 
@@ -160,6 +163,7 @@ alias dots='z ~/mydots/'
 alias deidocker='sudo systemctl start docker'
 alias resetnetwork='sudo systemctl restart NetworkManager'
 alias k='kubectl'
+alias kload='kind load docker-image'
 
 # lazy functions
 lazypush() {

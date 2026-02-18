@@ -134,7 +134,7 @@ alias zshconfig="vim ~/.zshrc"
 alias ohmyzsh="vim ~/.oh-my-zsh"
 
 # git aliases custom made by karthik
-alias gcm='git commit -m'
+alias gcm='git commit -s -m'
 alias gs='git status'
 alias gp='git push'
 alias ga='git add'

@@ -1,6 +1,6 @@
 return {
   "nvim-telescope/telescope.nvim",
-  branch = "0.1.x",
+  branch = 'master',
   dependencies = {
     "nvim-lua/plenary.nvim",
     { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
@@ -10,6 +10,15 @@ return {
   config = function()
     local telescope = require("telescope")
     local actions = require("telescope.actions")
+    local has_ts_parsers, ts_parsers = pcall(require, "nvim-treesitter.parsers")
+
+    -- nvim-treesitter removed parsers.ft_to_lang in newer versions, but
+    -- telescope 0.1.x still calls it for preview highlighting.
+    if has_ts_parsers and ts_parsers.ft_to_lang == nil then
+      ts_parsers.ft_to_lang = function(ft)
+        return vim.treesitter.language.get_lang(ft) or ft
+      end
+    end
 
     telescope.setup({
       defaults = {

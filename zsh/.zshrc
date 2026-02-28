@@ -113,8 +113,11 @@ zinit cdreplay -q
 
 # install oh-my-posh using curl
 # add oh-my-posh to zsh add the installation directory to path before sourcing it
-export PATH=$PATH:/home/karthik/.local/bin
-eval "$(oh-my-posh init zsh --config $HOME/.config/ohmyposh/zen.toml)"
+# export PATH=$PATH:/home/karthik/.local/bin
+# eval "$(oh-my-posh init zsh --config $HOME/.config/ohmyposh/zen.toml)"
+
+# use starship for a change
+eval "$(starship init zsh)"
 
 # Uncomment the following line to display red dots whilst waiting for completion.
 # You can also set it to another string to have that shown instead of the default red dots.

@@ -39,6 +39,7 @@ return {
 				"gopls",
 				"dockerls",
 				"pyright",
+				"clangd",
 			},
 			automatic_enable = false,
 		})
@@ -50,6 +51,8 @@ return {
 				"black", -- python formatter
 				"goimports", -- go formatter
 				"gofumpt", -- go formatter
+				"clang-format", -- c++ formatter
+				"codelldb", -- C++/Rust Debugger
 			},
 		})
 	end,

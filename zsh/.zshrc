@@ -155,7 +155,7 @@ alias cat='bat'
 
 # config files
 alias kittyconf='vim ~/.config/kitty/kitty.conf'
-alias nvimconf='cd ~/.config/nvim/ && nvim .'
+alias nvimconf='nvim ~/.config/nvim/'
 alias ompconf='vim ~/.config/ohmyposh/zen.toml'
 alias tmuxconf='vim ~/.tmux.conf'
 

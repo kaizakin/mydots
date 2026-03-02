@@ -206,6 +206,12 @@ function y() {
 	rm -f -- "$tmp"
 }
 
+
+# lazy dir create and cd
+mkcd () {
+  mkdir -p "$1" && cd "$1"
+}
+
 # Add Go binaries to the system path
 export GOPATH=$HOME/go
 export PATH=$PATH:$GOPATH/bin

@@ -117,6 +117,7 @@ zinit cdreplay -q
 # eval "$(oh-my-posh init zsh --config $HOME/.config/ohmyposh/zen.toml)"
 
 # use starship for a change
+export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
 eval "$(starship init zsh)"
 
 # Uncomment the following line to display red dots whilst waiting for completion.

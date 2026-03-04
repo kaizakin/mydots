@@ -31,3 +31,19 @@ keymap.set("n", "<leader>tn", "<cmd>tabn<CR>", { desc = "Go to next tab" }) --  
 keymap.set("n", "<leader>tp", "<cmd>tabp<CR>", { desc = "Go to previous tab" }) --  go to previous tab
 keymap.set("n", "<leader>tf", "<cmd>tabnew %<CR>", { desc = "Open current buffer in new tab" }) --  move current buffer to new tab
 
+-- Allow Ctrl+V to paste from system clipboard in Insert mode
+vim.keymap.set("i", "<C-v>", "<C-r>+", { noremap = true, silent = true })
+
+-- Allow Ctrl+V to paste in Command mode (very useful for paths/URLs)
+vim.keymap.set("c", "<C-v>", "<C-r>+", { noremap = true, silent = true })
+
+-- ctrl + s save in normal mode
+vim.keymap.set("n", "<C-s>", ":w<CR>", { noremap = true, silent = true })
+
+-- allow ctrl + s save in insert mode
+vim.keymap.set("i", "<C-s>", "<Esc>:w<CR>a", { noremap = true, silent = true })
+
+-- reload nvim config with leader + r
+vim.keymap.set("n", "<leader>r", function()
+	vim.cmd("source $MYVIMRC")
+end, { desc = "Reload nvim config" })

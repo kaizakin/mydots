@@ -2,11 +2,11 @@
 # config-file = ?"~/.config/omarchy/current/theme/ghostty.conf"
 
 # Font
-font-family = "Omarchy"
-font-style = Italic
-font-size = 9
+font-family = "Maple Mono"
+font-style = Medium Italic
+font-size = 9.1
 
-theme = Matte Black
+theme = Abernathy
 
 # Window
 window-theme = dark

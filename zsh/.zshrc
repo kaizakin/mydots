@@ -159,6 +159,7 @@ alias kittyconf='vim ~/.config/kitty/kitty.conf'
 alias nvimconf='nvim ~/.config/nvim/'
 alias ompconf='vim ~/.config/ohmyposh/zen.toml'
 alias tmuxconf='vim ~/.tmux.conf'
+alias ghosttyconf='nvim ~/.config/ghostty'
 
 # add dotfiles folder alias
 alias dots='z ~/mydots/'

@@ -3,7 +3,7 @@
 
 # Font
 font-family = "Maple Mono"
-font-style = Medium Italic
+font-style = Regular
 font-size = 9.1
 
 theme = Abernathy

@@ -191,6 +191,10 @@ esac
 
 export PATH="$PATH:$HOME/.local/bin"
 
+# export env vars for hadooop
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
+export PATH=$JAVA_HOME/bin:$PATH
+
 # bun completions
 [ -s "/home/karthik/.bun/_bun" ] && source "/home/karthik/.bun/_bun"
 

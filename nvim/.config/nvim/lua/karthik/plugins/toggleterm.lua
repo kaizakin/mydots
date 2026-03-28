@@ -1,14 +1,11 @@
 return {
 	"akinsho/toggleterm.nvim",
 	version = "*",
-	keys = {
-		-- Mapping for Normal Mode (n) and Terminal Mode (t)
-		{ [[<C-\>]], "<cmd>ToggleTerm<cr>", mode = { "n", "t" }, desc = "Toggle Terminal" },
-	},
+	lazy = false,
 	config = function()
 		require("toggleterm").setup({
 			size = 20,
-			open_mapping = [[<c-\>]], -- This is your shortcut (Ctrl + \)
+			open_mapping = [[<c-j>]], -- This is your shortcut (Ctrl + j)
 			direction = "float", -- Can be 'float', 'horizontal', or 'vertical'
 			shade_terminals = true,
 			insert_mappings = true,
@@ -23,5 +20,12 @@ return {
 				end,
 			},
 		})
+		function _G.set_terminal_keymaps()
+			local opts = { buffer = 0 }
+			vim.keymap.set("t", "<C-j>", [[<Cmd>exe v:count1 . "ToggleTerm"<CR>]], opts)
+		end
+
+		-- This applys the mapping only when a terminal buffer is opened
+		-- vim.cmd("autocmd! TermOpen term://* lua set_terminal_keymaps()")
 	end,
 }

@@ -5,7 +5,7 @@ return {
 	config = function()
 		require("toggleterm").setup({
 			size = 20,
-			open_mapping = [[<c-j>]], -- This is your shortcut (Ctrl + j)
+			open_mapping = [[<c-a>]], -- This is your shortcut (Ctrl + j)
 			direction = "float", -- Can be 'float', 'horizontal', or 'vertical'
 			shade_terminals = true,
 			insert_mappings = true,
@@ -22,7 +22,8 @@ return {
 		})
 		function _G.set_terminal_keymaps()
 			local opts = { buffer = 0 }
-			vim.keymap.set("t", "<C-j>", [[<Cmd>exe v:count1 . "ToggleTerm"<CR>]], opts)
+			vim.keymap.set("t", "<C-a>", [[<Cmd>exe v:count1 . "ToggleTerm"<CR>]], opts)
+			vim.keymap.set("n", "<C-a>", "<cmd>ToggleTerm<CR>")
 		end
 
 		-- This applys the mapping only when a terminal buffer is opened

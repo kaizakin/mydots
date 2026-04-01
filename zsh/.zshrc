@@ -226,3 +226,4 @@ mkcd () {
 export GOPATH=$HOME/go
 export PATH=$PATH:$GOPATH/bin
 source /usr/share/nvm/init-nvm.sh
+export LD_LIBRARY_PATH=~/Qt/6.11.0/gcc_64/lib:$LD_LIBRARY_PATH

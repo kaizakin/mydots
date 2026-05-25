@@ -266,3 +266,5 @@ tdl() {
   # Select the nvim pane for focus
   tmux select-pane -t "$editor_pane"
 }
+
+. "$HOME/.local/share/../bin/env"

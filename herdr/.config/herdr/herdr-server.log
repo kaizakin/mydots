@@ -1,0 +1,51 @@
+2026-06-29T17:38:55.787560Z  INFO herdr::api::server: api server listening path=/home/karthik/.config/herdr/herdr.sock
+2026-06-29T17:38:55.789220Z  INFO herdr::app: using pane scrollback configuration pane_scrollback_limit_bytes=10000000
+2026-06-29T17:38:55.813207Z  INFO herdr::logging: spawning pane terminal event="pane.spawn.start" subsystem="pane" outcome="started" pane_id=1 rows=24 cols=80 scrollback_limit_bytes=10000000
+2026-06-29T17:38:55.813217Z  INFO herdr::logging: checking for updates event="update.check.start" subsystem="update" outcome="started"
+2026-06-29T17:38:55.814081Z  INFO herdr::logging: pane child spawned event="pane.spawned" subsystem="pane" outcome="ok" pane_id=1 pid=41993
+2026-06-29T17:38:55.814184Z  INFO herdr::logging: workspace created event="workspace.create" subsystem="workspace" outcome="ok" workspace_id="w1" pane_id=1
+2026-06-29T17:38:55.814188Z  INFO herdr::logging: workspace focused event="workspace.focus" subsystem="workspace" outcome="ok" workspace_id="w1"
+2026-06-29T17:38:55.814192Z  INFO herdr::logging: tab focused event="tab.focus" subsystem="tab" outcome="ok" workspace_id="w1" tab_id="w1:t1"
+2026-06-29T17:38:55.814195Z  INFO herdr::server::headless: created startup workspace cwd=/home/karthik/Projects/oss/urunc
+2026-06-29T17:38:55.814242Z  INFO herdr::server::headless: client protocol socket listening path=/home/karthik/.config/herdr/herdr-client.sock
+2026-06-29T17:38:55.814259Z  INFO herdr::server::headless: herdr server started api_socket=/home/karthik/.config/herdr/herdr.sock client_socket=/home/karthik/.config/herdr/herdr-client.sock
+2026-06-29T17:38:55.814268Z  INFO herdr::logging: herdr starting event="app.startup" subsystem="server" outcome="started" pid=41971
+2026-06-29T17:38:56.066938Z  INFO herdr::server::headless: client connected client_id=2 cols=268 rows=61 cell_width_px=0 cell_height_px=0 render_encoding=SemanticFrame
+2026-06-29T17:39:00.815556Z  INFO herdr::logging: session saved event="persist.save" subsystem="persist" outcome="ok" path=/home/karthik/.config/herdr/session.json workspaces=1
+2026-06-29T17:39:08.641281Z  INFO herdr::logging: spawning pane terminal event="pane.spawn.start" subsystem="pane" outcome="started" pane_id=2 rows=60 cols=242 scrollback_limit_bytes=10000000
+2026-06-29T17:39:08.644148Z  INFO herdr::logging: pane child spawned event="pane.spawned" subsystem="pane" outcome="ok" pane_id=2 pid=42853
+2026-06-29T17:39:08.644436Z  INFO herdr::logging: tab focused event="tab.focus" subsystem="tab" outcome="ok" workspace_id="w1" tab_id="w1:t2"
+2026-06-29T17:39:08.644451Z  INFO herdr::logging: tab created event="tab.create" subsystem="tab" outcome="ok" workspace_id="w1" tab_id="w1:t2" pane_id=2
+2026-06-29T17:39:13.655975Z  INFO herdr::logging: session saved event="persist.save" subsystem="persist" outcome="ok" path=/home/karthik/.config/herdr/session.json workspaces=1
+2026-06-29T17:39:19.257684Z  INFO herdr::logging: tab focused event="tab.focus" subsystem="tab" outcome="ok" workspace_id="w1" tab_id="w1:t1"
+2026-06-29T17:39:21.840919Z  INFO herdr::logging: tab focused event="tab.focus" subsystem="tab" outcome="ok" workspace_id="w1" tab_id="w1:t2"
+2026-06-29T17:39:22.711176Z  INFO herdr::logging: tab focused event="tab.focus" subsystem="tab" outcome="ok" workspace_id="w1" tab_id="w1:t1"
+2026-06-29T17:39:27.713575Z  INFO herdr::logging: session saved event="persist.save" subsystem="persist" outcome="ok" path=/home/karthik/.config/herdr/session.json workspaces=1
+2026-06-29T17:39:42.162997Z  INFO herdr::logging: session saved event="persist.save" subsystem="persist" outcome="ok" path=/home/karthik/.config/herdr/session.json workspaces=1
+2026-06-29T17:40:02.443022Z  INFO herdr::logging: spawning pane terminal event="pane.spawn.start" subsystem="pane" outcome="started" pane_id=3 rows=30 cols=132 scrollback_limit_bytes=10000000
+2026-06-29T17:40:02.446404Z  INFO herdr::logging: pane child spawned event="pane.spawned" subsystem="pane" outcome="ok" pane_id=3 pid=44844
+2026-06-29T17:40:07.098981Z  INFO herdr::logging: tab focused event="tab.focus" subsystem="tab" outcome="ok" workspace_id="w1" tab_id="w1:t1"
+2026-06-29T17:40:08.615274Z  INFO herdr::logging: tab focused event="tab.focus" subsystem="tab" outcome="ok" workspace_id="w1" tab_id="w1:t1"
+2026-06-29T17:40:09.386324Z  INFO herdr::logging: tab focused event="tab.focus" subsystem="tab" outcome="ok" workspace_id="w1" tab_id="w1:t1"
+2026-06-29T17:40:14.059742Z  INFO herdr::logging: tab focused event="tab.focus" subsystem="tab" outcome="ok" workspace_id="w1" tab_id="w1:t1"
+2026-06-29T17:40:16.589882Z  INFO herdr::logging: tab focused event="tab.focus" subsystem="tab" outcome="ok" workspace_id="w1" tab_id="w1:t1"
+2026-06-29T17:40:21.592107Z  INFO herdr::logging: session saved event="persist.save" subsystem="persist" outcome="ok" path=/home/karthik/.config/herdr/session.json workspaces=1
+2026-06-29T17:45:55.234408Z  INFO herdr::server::headless: client resize client_id=2 cols=130 rows=61 cell_width_px=0 cell_height_px=0
+2026-06-29T17:45:57.038155Z  INFO herdr::server::headless: client resize client_id=2 cols=268 rows=61 cell_width_px=0 cell_height_px=0
+2026-06-29T17:47:34.297612Z  INFO herdr::logging: tab focused event="tab.focus" subsystem="tab" outcome="ok" workspace_id="w1" tab_id="w1:t1"
+2026-06-29T17:47:38.984851Z  INFO herdr::logging: tab focused event="tab.focus" subsystem="tab" outcome="ok" workspace_id="w1" tab_id="w1:t1"
+2026-06-29T17:47:39.737519Z  INFO herdr::logging: tab focused event="tab.focus" subsystem="tab" outcome="ok" workspace_id="w1" tab_id="w1:t1"
+2026-06-29T17:47:44.738975Z  INFO herdr::logging: session saved event="persist.save" subsystem="persist" outcome="ok" path=/home/karthik/.config/herdr/session.json workspaces=1
+2026-06-29T17:48:10.083489Z  INFO herdr::logging: tab focused event="tab.focus" subsystem="tab" outcome="ok" workspace_id="w1" tab_id="w1:t1"
+2026-06-29T17:48:13.573394Z  INFO herdr::logging: tab focused event="tab.focus" subsystem="tab" outcome="ok" workspace_id="w1" tab_id="w1:t1"
+2026-06-29T17:48:18.574414Z  INFO herdr::logging: session saved event="persist.save" subsystem="persist" outcome="ok" path=/home/karthik/.config/herdr/session.json workspaces=1
+2026-06-29T17:48:35.228570Z  INFO herdr::logging: tab focused event="tab.focus" subsystem="tab" outcome="ok" workspace_id="w1" tab_id="w1:t1"
+2026-06-29T17:48:40.230841Z  INFO herdr::logging: session saved event="persist.save" subsystem="persist" outcome="ok" path=/home/karthik/.config/herdr/session.json workspaces=1
+2026-06-29T17:48:41.502576Z  INFO herdr::app::actions: copied selection to clipboard
+2026-06-29T17:48:48.556735Z  INFO herdr::logging: tab focused event="tab.focus" subsystem="tab" outcome="ok" workspace_id="w1" tab_id="w1:t1"
+2026-06-29T17:48:53.348901Z  INFO herdr::app::actions: copied double-clicked token to clipboard
+2026-06-29T17:48:53.559339Z  INFO herdr::logging: session saved event="persist.save" subsystem="persist" outcome="ok" path=/home/karthik/.config/herdr/session.json workspaces=1
+2026-06-29T17:48:54.516547Z  INFO herdr::logging: tab focused event="tab.focus" subsystem="tab" outcome="ok" workspace_id="w1" tab_id="w1:t1"
+2026-06-29T17:48:59.519532Z  INFO herdr::logging: session saved event="persist.save" subsystem="persist" outcome="ok" path=/home/karthik/.config/herdr/session.json workspaces=1
+2026-06-29T17:49:24.442520Z  INFO herdr::logging: tab focused event="tab.focus" subsystem="tab" outcome="ok" workspace_id="w1" tab_id="w1:t1"
+2026-06-29T17:49:29.444406Z  INFO herdr::logging: session saved event="persist.save" subsystem="persist" outcome="ok" path=/home/karthik/.config/herdr/session.json workspaces=1

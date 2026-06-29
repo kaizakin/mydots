@@ -1,0 +1,69 @@
+{
+  "version": 3,
+  "workspaces": [
+    {
+      "id": "w1",
+      "custom_name": null,
+      "identity_cwd": "/home/karthik",
+      "public_pane_numbers": {
+        "1": 1,
+        "3": 3,
+        "2": 2
+      },
+      "next_public_pane_number": 4,
+      "public_tab_numbers": [
+        1,
+        2
+      ],
+      "next_public_tab_number": 3,
+      "tabs": [
+        {
+          "custom_name": null,
+          "layout": {
+            "Split": {
+              "direction": "Horizontal",
+              "ratio": 0.5,
+              "first": {
+                "Pane": 1
+              },
+              "second": {
+                "Pane": 3
+              }
+            }
+          },
+          "panes": {
+            "1": {
+              "cwd": "/home/karthik"
+            },
+            "3": {
+              "cwd": "/home/karthik/mydots/herdr/.config"
+            }
+          },
+          "zoomed": false,
+          "focused": 1,
+          "root_pane": 1
+        },
+        {
+          "custom_name": "hello",
+          "layout": {
+            "Pane": 2
+          },
+          "panes": {
+            "2": {
+              "cwd": "/home/karthik/Projects/oss/urunc"
+            }
+          },
+          "zoomed": false,
+          "focused": 2,
+          "root_pane": 2
+        }
+      ],
+      "active_tab": 0
+    }
+  ],
+  "active": 0,
+  "selected": 0,
+  "sidebar_width": 26,
+  "sidebar_section_split": 0.5081967,
+  "collapsed_space_keys": []
+}

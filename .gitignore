@@ -1,2 +1,4 @@
 hyprland/.config/hypr/shaders/*
 omarchy/*
+/herdr/.config/herdr/herdr-client.log
+/herdr/.config/herdr/herdr-server.log

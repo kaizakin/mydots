@@ -6,6 +6,7 @@ add_newline = false
 palette = "custom1"
 
 format = """
+$os\
 $directory\
 ${custom.giturl}\
 $git_branch\
@@ -121,7 +122,7 @@ ignore_timeout = true
 
 
 [os]
-disabled = true
+disabled = false
 
 [os.symbols]
 Windows = "󰍲"

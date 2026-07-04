@@ -162,7 +162,7 @@ alias tmuxconf='vim ~/.tmux.conf'
 alias ghosttyconf='nvim ~/.config/ghostty'
 
 # add dotfiles folder alias
-alias dots='z ~/mydots/'
+alias dots='z ~/mydots/ && nvim .'
 
 # lazy aliases
 alias deidocker='sudo systemctl start docker'

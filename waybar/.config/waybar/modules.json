@@ -23,7 +23,7 @@
     "interval": 1800,
     "signal": 1,
     "hide-empty-text": false,
-    "on-click": "ghostty --class=local.floating -e sudo pacman -Syu"
+    "on-click": "kitty --class=local.floating -e sudo pacman -Syu"
   },
   "custom/hypridle": {
     "format": "",
@@ -56,12 +56,12 @@
   "cpu": {
     "interval": 5,
     "format": "",
-    "on-click": "ghostty -e btop"
+    "on-click": "kitty -e btop"
   },
   "pulseaudio": {
     "scroll-step": 1,
     "format": "{icon}",
-    "on-click": "ghostty --class=local.wiremix -e wiremix",
+    "on-click": "kitty --class=local.wiremix -e wiremix",
     "on-click-right": "pamixer -t",
     "tooltip-format": "Playing at {volume}%",
     "format-muted": "",
@@ -74,7 +74,7 @@
     "format-disabled": "󰂲",
     "format-connected": "",
     "tooltip-format": "Devices connected: {num_connections}",
-    "on-click": "ghostty --class=local.bluetui -e bluetui"
+    "on-click": "kitty --class=local.bluetui -e bluetui"
   },
   "battery": {
     "format": "{capacity}% {icon}",
@@ -106,7 +106,7 @@
     "tooltip-format-disconnected": "Disconnected",
     "interval": 3,
     "spacing": 1,
-    "on-click": "ghostty --class=local.wlctl -e wlctl"
+    "on-click": "kitty --class=local.wlctl -e wlctl"
   },
   "custom/filemanager": {
     "format": "",

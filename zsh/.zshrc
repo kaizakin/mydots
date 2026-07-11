@@ -156,18 +156,18 @@ alias cat='bat'
 
 
 # config files
-alias kittyconf='vim ~/.config/kitty/kitty.conf'
-alias nvimconf='nvim ~/.config/nvim/'
-alias ompconf='vim ~/.config/ohmyposh/zen.toml'
-alias tmuxconf='vim ~/.tmux.conf'
-alias ghosttyconf='nvim ~/.config/ghostty'
+alias kittyconf='neovide ~/.config/kitty/kitty.conf'
+alias nvimconf='neovide ~/.config/nvim/'
+alias ompconf='neovide ~/.config/ohmyposh/zen.toml'
+alias tmuxconf='neovide ~/.tmux.conf'
+alias ghosttyconf='neovide ~/.config/ghostty'
 
 # add dotfiles folder alias
-alias dots='z ~/mydots/ && nvim .'
+alias dots='z ~/mydots/ && neovide .'
 
 # lazy aliases
-alias deidocker='sudo systemctl start docker'
-alias resetnetwork='sudo systemctl restart NetworkManager'
+# alias deidocker='sudo systemctl start docker'
+# alias resetnetwork='sudo systemctl restart NetworkManager'
 alias k='kubectl'
 alias kload='kind load docker-image'
 

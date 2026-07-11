@@ -142,6 +142,7 @@ alias gcm='git commit -s -m'
 alias gs='git status'
 alias gp='git push'
 alias ga='git add'
+alias h='herdr'
 
 # fzf and open that in nvim 
 alias fzfnvim='nvim $(fzf -m --preview="bat --color=always {}")'

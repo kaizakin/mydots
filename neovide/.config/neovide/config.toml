@@ -1,0 +1,7 @@
+vsync = true
+maximized = false
+frame = "full"
+
+[font]
+normal = ["JetBrainsMono Nerd Font"]
+size = 9.0

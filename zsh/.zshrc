@@ -149,6 +149,7 @@ alias fzfnvim='nvim $(fzf -m --preview="bat --color=always {}")'
 # tools
 alias lzg='lazygit'
 alias lzc='lazycommit'
+alias h='herdr'
 
 alias ls='eza --icons=auto'
 alias cat='bat'

@@ -18,6 +18,22 @@ return {
 			popup_border_style = "rounded",
 			enable_git_status = true,
 			enable_diagnostics = true,
+			default_component_configs = {
+				git_status = {
+					symbols = {
+						added = "✚",
+						deleted = "✖",
+						modified = "",
+						renamed = "󰁯",
+						-- Status type
+						untracked = "",
+						ignored = "",
+						unstaged = "󰔌",
+						staged = "",
+						conflict = "",
+					},
+				},
+			},
 			filesystem = {
 				filesystem_count_to_count = false,
 				follow_current_file = {

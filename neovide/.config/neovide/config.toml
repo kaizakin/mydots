@@ -1,6 +1,11 @@
 vsync = true
-maximized = false
 frame = "full"
+idle = true
+maximized = true
+no-multigrid = false
+tabs=true
+title-hidden = true
+transparency = 0.8
 
 [font]
 normal = ["JetBrainsMono Nerd Font"]

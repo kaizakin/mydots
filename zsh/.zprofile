@@ -8,3 +8,7 @@ fi
 export PATH="/home/karthik/.local/share/solana/install/active_release/bin:$PATH"
 
 export PATH=$PATH:/usr/local/go/bin
+
+
+# Added by Antigravity CLI installer
+export PATH="/home/karthik/.local/bin:$PATH"

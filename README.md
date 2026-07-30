@@ -20,11 +20,11 @@ cp -r codebase-onboarding ~/.claude/skills/
 
 You can use a skill by tagging explicitly with `/skill`, e.g. `/codebase-onboarding`.
 
-| Skill                                              | Description                                                                                                                                            |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [ai-slop-humanizer](.skills/ai-slop-humanizer)     | Turns a AI generated jargony slop into a human written conversational tone for easy understanding (not-perfect-yet)                                    |
-| [codebase-onboarding](.skills/codebase-onboarding) | Creates a ONBOARDING.md file containing easily digestable information about the project for beginner contributors                                      |
-| [deep-explainer](.skills/deep-explainer)           | Explain the user's question without using much jargons & without being blunt. Use the current directory's codebase context well to answer the question |
+| Skill                                             | Description                                                                                                                                            |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [ai-slop-humanizer](skills/ai-slop-humanizer)     | Turns a AI generated jargony slop into a human written conversational tone for easy understanding (not-perfect-yet)                                    |
+| [codebase-onboarding](skills/codebase-onboarding) | Creates a ONBOARDING.md file containing easily digestable information about the project for beginner contributors                                      |
+| [deep-explainer](skills/deep-explainer)           | Explain the user's question without using much jargons & without being blunt. Use the current directory's codebase context well to answer the question |
 
 ## Setup
 

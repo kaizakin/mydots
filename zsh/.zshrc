@@ -104,6 +104,7 @@ eval "$(brew shellenv)"
 zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color $realpath'
 
 # automatically load completions
+fpath=(~/.zsh/completions $fpath) # load completion files
 autoload -U compinit && compinit
 
 # Zinit re-applies certain plugin actions that depend on your current directory context

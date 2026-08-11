@@ -50,3 +50,6 @@ hl.gesture({
 		hl.dispatch(hl.dsp.focus({ workspace = "+1" }))
 	end,
 })
+
+hl.unbind("SUPER + RETURN")
+hl.bind("SUPER + RETURN", hl.dsp.exec_cmd("kitty"))

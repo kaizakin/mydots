@@ -27,7 +27,26 @@
 -- o.bind("SUPER + SHIFT + S", nil, "omarchy-capture-screenshot")
 -- o.bind("SUPER + H", nil, "voxtype record toggle")
 -- o.bind("SUPER + PERIOD", nil, "omarchy-shell shell toggle omarchy.emojis")
+
+-- left right workspace switch
 hl.unbind("SUPER + D")
 hl.unbind("SUPER + A")
 hl.bind("SUPER + D", hl.dsp.focus({ workspace = "+1" }))
 hl.bind("SUPER + A", hl.dsp.focus({ workspace = "-1" }))
+
+-- left right workspace switch using touchpad finger gesture
+hl.gesture({
+	fingers = 3,
+	direction = "left",
+	action = function()
+		hl.dispatch(hl.dsp.focus({ workspace = "-1" }))
+	end,
+})
+
+hl.gesture({
+	fingers = 3,
+	direction = "right",
+	action = function()
+		hl.dispatch(hl.dsp.focus({ workspace = "+1" }))
+	end,
+})

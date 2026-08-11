@@ -34,22 +34,14 @@ hl.unbind("SUPER + A")
 hl.bind("SUPER + D", hl.dsp.focus({ workspace = "+1" }))
 hl.bind("SUPER + A", hl.dsp.focus({ workspace = "-1" }))
 
--- left right workspace switch using touchpad finger gesture
-hl.gesture({
-	fingers = 3,
-	direction = "left",
-	action = function()
-		hl.dispatch(hl.dsp.focus({ workspace = "-1" }))
-	end,
-})
-
-hl.gesture({
-	fingers = 3,
-	direction = "right",
-	action = function()
-		hl.dispatch(hl.dsp.focus({ workspace = "+1" }))
-	end,
-})
-
 hl.unbind("SUPER + RETURN")
 hl.bind("SUPER + RETURN", hl.dsp.exec_cmd("kitty"))
+
+-- fullscreen toggle
+hl.bind("ALT + F", hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" }))
+
+hl.gesture({
+	fingers = 3,
+	direction = "horizontal",
+	action = "workspace",
+})

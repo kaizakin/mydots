@@ -7,6 +7,9 @@
 // Find the full list of options on the wiki:
 // https://niri-wm.github.io/niri/Configuration:-Input
 
+// autostart
+spawn-at-startup "noctalia"
+
 
 // ignore the client side decorations of applications
 prefer-no-csd
@@ -74,6 +77,11 @@ input {
     // Focus windows and outputs automatically when moving the mouse into them.
     // Setting max-scroll-amount="0%" makes it work only on windows already fully on screen.
     focus-follows-mouse max-scroll-amount="0%"
+}
+
+cursor {
+    xcursor-theme "macOS"
+    xcursor-size 24
 }
 
 // You can configure outputs by their name, which you can find
@@ -163,7 +171,7 @@ layout {
     // You can change how the focus ring looks.
     focus-ring {
         // Uncomment this line to disable the focus ring.
-        // off
+        off
 
         // How many logical pixels the ring extends out from the windows.
         width 1.5
@@ -282,7 +290,7 @@ layout {
 
 hotkey-overlay {
     // Uncomment this line to disable the "Important Hotkeys" pop-up at startup.
-    // skip-at-startup
+    skip-at-startup
 }
 
 // Uncomment this line to ask the clients to omit their client-side decorations if possible.
@@ -323,6 +331,9 @@ window-rule {
     // You can get away with just app-id="wezterm" if you want.
     match app-id=r#"^org\.wezfurlong\.wezterm$"#
     default-column-width {}
+    geometry-corner-radius 12
+    clip-to-geometry true
+    opacity 0.90
 }
 
 // Open the Firefox picture-in-picture player as floating by default.
@@ -351,6 +362,10 @@ window-rule {
 /-window-rule {
     geometry-corner-radius 12
     clip-to-geometry true
+}
+
+environment {
+  QT_QPA_PLATFORMTHEME "qt6ct"
 }
 
 binds {

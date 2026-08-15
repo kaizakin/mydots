@@ -230,7 +230,7 @@ mkcd () {
 # Add Go binaries to the system path
 export GOPATH=$HOME/go
 export PATH=$PATH:$GOPATH/bin
-source /usr/share/nvm/init-nvm.sh
+# source /usr/share/nvm/init-nvm.sh
 export LD_LIBRARY_PATH=~/Qt/6.11.0/gcc_64/lib:$LD_LIBRARY_PATH
 
 # Create a Tmux Dev Layout with editor, ai, and terminal
@@ -272,8 +272,6 @@ tdl() {
   tmux select-pane -t "$editor_pane"
 }
 
-. "$HOME/.local/share/../bin/env"
-
 # >>> grok installer >>>
 export PATH="$HOME/.grok/bin:$PATH"
 fpath=(~/.grok/completions/zsh $fpath)
@@ -287,3 +285,5 @@ export PATH="/home/karthik/.local/bin:$PATH"
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv zsh)"

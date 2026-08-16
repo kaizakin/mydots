@@ -95,7 +95,7 @@ zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 eval "$(zoxide init zsh)"
 
 # homebrew
-eval "$(brew shellenv)"
+# eval "$(brew shellenv)"
 
 # uncomment this line to alias zoxide to cd if you cannot overcome your muscle memory.
 # eval "$(zoxide init --cmd cd zsh)"
@@ -153,7 +153,6 @@ alias lzg='lazygit'
 alias lzc='lazycommit'
 alias h='herdr'
 alias n='neovide'
-alias agy="agy --dangerously-skip-permissions"
 
 alias ls='eza --icons=auto'
 alias cat='bat'

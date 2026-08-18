@@ -1,5 +1,9 @@
 // autostart
-spawn-at-startup "noctalia"
+// spawn-at-startup "noctalia"
+spawn-at-startup "quickshell"
+spawn-at-startup "awww-daemon"
+spawn-at-startup "dbus-update-activation-environment" "--systemd" "WAYLAND_DISPLAY" "XDG_CURRENT_DESKTOP"
+spawn-at-startup "/usr/bin/gnome-keyring-daemon" "--start" "--components=secrets,pkcs11"
 
 
 // Add lines like this to spawn processes at startup.

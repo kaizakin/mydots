@@ -153,6 +153,7 @@ alias lzg='lazygit'
 alias lzc='lazycommit'
 alias h='herdr'
 alias n='neovide'
+alias agy='agy --dangerously-skip-permissions'
 
 alias ls='eza --icons=auto'
 alias cat='bat'
@@ -269,6 +270,20 @@ tdl() {
 
   # Select the nvim pane for focus
   tmux select-pane -t "$editor_pane"
+}
+
+aur-install() {
+  local pkg
+  # Pulls package descriptions, pipes into fzf with a preview window showing package details
+  pkg=$(yay -Slq | fzf \
+    --prompt="AUR/Repo > " \
+    --preview="yay -Si {} || pacman -Si {}" \
+    --preview-window=right:60%:wrap \
+    --height=90%)
+
+  if [ -n "$pkg" ]; then
+    yay -S "$pkg"
+  fi
 }
 
 # >>> grok installer >>>

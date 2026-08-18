@@ -262,7 +262,8 @@ binds {
     // Mod+Space       { switch-layout "next"; }
     // Mod+Shift+Space { switch-layout "prev"; }
 
-    Print { screenshot; }
+    // Print { screenshot; }
+    Print { spawn "sh" "-c" "grim -g \"$(slurp)\" - | satty --filename -"; }
     Ctrl+Print { screenshot-screen; }
     Alt+Print { screenshot-window; }
 

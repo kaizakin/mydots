@@ -13,6 +13,11 @@ window-rule {
     open-maximized true
 }
 
+window-rule {
+    match app-id="com.gabm.satty"
+    open-floating true
+}
+
 // Window rules let you adjust behavior for individual windows.
 // Find more information on the wiki:
 // https://niri-wm.github.io/niri/Configuration:-Window-Rules

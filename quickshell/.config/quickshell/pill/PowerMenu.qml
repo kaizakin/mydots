@@ -20,7 +20,7 @@ PanelWindow {
     readonly property var powerActions: [
         { icon: "󰐥", label: "Shutdown", command: ["systemctl", "poweroff"] },
         { icon: "󰜉", label: "Reboot", command: ["systemctl", "reboot"] },
-        { icon: "󰍃", label: "Logout", command: ["hyprctl", "dispatch", "exit"] },
+        { icon: "󰍃", label: "Logout", command: ["niri", "msg", "action", "quit", "--skip-confirmation"] },
         { icon: "󰌾", label: "Lock", command: ["hyprlock"] },
         { icon: "󰤄", label: "Sleep", command: ["systemctl", "suspend"] }
     ]

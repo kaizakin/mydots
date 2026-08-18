@@ -146,7 +146,7 @@ PanelWindow {
 
     Process {
         id: recorderListProcess
-        command: ["sh", "-c", "if pgrep -x wf-recorder >/dev/null; then printf 'stop\\tStop recording\\tFinalize the current recording\\n'; else hyprctl monitors -j | jq -r '.[].name' | while IFS= read -r output; do [ -n \"$output\" ] && printf 'output\\t%s\\tRecord monitor %s\\n' \"$output\" \"$output\"; done; fi"]
+        command: ["sh", "-c", "if pgrep -x wf-recorder >/dev/null; then printf 'stop\\tStop recording\\tFinalize the current recording\\n'; else (niri msg -j outputs 2>/dev/null | jq -r 'keys[]' || hyprctl monitors -j 2>/dev/null | jq -r '.[].name') | while IFS= read -r output; do [ -n \"$output\" ] && printf 'output\\t%s\\tRecord monitor %s\\n' \"$output\" \"$output\"; done; fi"]
 
         stdout: StdioCollector {
             onStreamFinished: {

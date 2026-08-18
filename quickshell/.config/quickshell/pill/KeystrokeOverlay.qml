@@ -18,12 +18,11 @@ PanelWindow {
     WlrLayershell.namespace: "keystroke-overlay"
 
 
-    // @note inverted theme colors: light background on dark mode, dark background on light mode
-    readonly property color boxBg: Local.Theme.light ? "#352B2D" : "#F1DBC2"
-    readonly property color boxBorder: Local.Theme.light ? "#4B3D43" : "#CCB7A0"
-    readonly property color boxText: Local.Theme.light ? "#F1DBC2" : "#352B2D"
-    readonly property color boxAccent: Local.Theme.light ? "#DFC8B1" : "#44373A"
-    readonly property color boxMuted: Local.Theme.light ? "#AA9D8A" : "#625458"
+    readonly property color boxBg: Local.Theme.light ? "#F5F5F5" : "#CC000000"
+    readonly property color boxBorder: Local.Theme.light ? "#E0E0E0" : "#33FFFFFF"
+    readonly property color boxText: Local.Theme.light ? "#000000" : "#FFFFFF"
+    readonly property color boxAccent: Local.Theme.light ? "#EAEAEA" : "#CC181818"
+    readonly property color boxMuted: Local.Theme.light ? "#888888" : "#888888"
 
     readonly property real scaleFactor: Local.Settings.keystrokeSize / 100
     readonly property int fadeTimeMs: Local.Settings.keystrokeFadeTime * 1000

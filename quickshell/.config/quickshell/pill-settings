@@ -21,7 +21,6 @@ clipboardPanelSize=100
 launcherPanelSize=100
 wallpaperPanelSize=100
 themePanelSize=100
-showWindowTitle=true
 showAiUsage=true
 aiUsageProviders=codex,cursor,antigravity,copilot,grok,opencode,claude
 aiUsageBarProviders=codex,cursor,antigravity,copilot,grok,opencode,claude

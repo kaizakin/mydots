@@ -1,6 +1,5 @@
 import QtQuick
 import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Services.Pipewire
 import Quickshell.Services.SystemTray
@@ -25,7 +24,6 @@ PanelWindow {
     property date now: new Date()
     property string brightness: "--"
     signal trayMenuRequested(var item, int anchorX)
-    readonly property string activeWindowTitle: Hyprland.activeToplevel?.title || "Desktop"
     readonly property bool showMonitorStatus: Settings.showCpu || Settings.showMemory || Settings.showTemperature || Settings.showNetwork
     readonly property bool showSystemStatus: root.showMonitorStatus || Settings.showAiUsage
 
@@ -187,7 +185,7 @@ PanelWindow {
                     spacing: 3
 
                     Repeater {
-                        model: 5
+                        model: Math.max(5, Niri.workspaces.length > 0 ? (Niri.workspaces[Niri.workspaces.length - 1].idx || 5) : 5)
 
                         delegate: Rectangle {
                             id: workspaceButton
@@ -195,7 +193,7 @@ PanelWindow {
                             height: 20
                             radius: height / 2
                             property int workspace: index + 1
-                            property bool focused: Hyprland.focusedWorkspace && Hyprland.focusedWorkspace.id === workspace
+                            property bool focused: Niri.focusedWorkspaceIdx === workspace
                             color: focused ? Theme.highlight : "transparent"
 
                             Text {
@@ -207,34 +205,12 @@ PanelWindow {
                                 font.bold: parent.focused
                             }
 
-                            Process {
-                                id: workspaceProcess
-                                command: ["hyprctl", "dispatch", "hl.dsp.focus({ workspace = " + workspaceButton.workspace + " })"]
-                            }
-
                             MouseArea {
                                 anchors.fill: parent
-                                onClicked: workspaceProcess.running = true
+                                onClicked: Niri.focusWorkspace(workspaceButton.workspace)
                             }
                         }
                     }
-                }
-            }
-
-            Pill {
-                visible: Settings.showWindowTitle
-                width: Math.min(240, windowTitle.implicitWidth + 24)
-
-                Text {
-                    id: windowTitle
-                    anchors.centerIn: parent
-                    width: parent.width - 24
-                    text: root.activeWindowTitle
-                    color: Theme.text
-                    font.family: Theme.font
-                    font.pixelSize: 12
-                    elide: Text.ElideRight
-                    horizontalAlignment: Text.AlignHCenter
                 }
             }
         }
@@ -379,7 +355,7 @@ PanelWindow {
 
                     Text {
                         visible: Settings.showTime
-                        text: "󰥔 " + Qt.formatTime(root.now, Settings.showSeconds ? "HH:mm:ss" : "HH:mm")
+                        text: "󰥔 " + Qt.formatTime(root.now, Settings.showSeconds ? "hh:mm:ss AP" : "hh:mm AP")
                         color: Theme.text
                         font.family: Theme.font
                         font.pixelSize: 12

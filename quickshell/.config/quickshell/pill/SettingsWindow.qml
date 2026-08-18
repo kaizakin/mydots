@@ -699,8 +699,7 @@ FloatingWindow {
                     }
 
                     SettingRow { label: "System tray"; description: "Display application status icons"; enabled: true; checked: Local.Settings.showTray; onToggled: value => { Local.Settings.showTray = value; Local.Settings.save() } }
-                    SettingRow { label: "Workspaces"; description: "Display Hyprland workspace buttons"; enabled: true; checked: Local.Settings.showWorkspaces; onToggled: value => { Local.Settings.showWorkspaces = value; Local.Settings.save() } }
-                    SettingRow { label: "Window name"; description: "Display the active window title"; enabled: true; checked: Local.Settings.showWindowTitle; onToggled: value => { Local.Settings.showWindowTitle = value; Local.Settings.save() } }
+                    SettingRow { label: "Workspaces"; description: "Display Niri workspace buttons"; enabled: true; checked: Local.Settings.showWorkspaces; onToggled: value => { Local.Settings.showWorkspaces = value; Local.Settings.save() } }
                     SettingRow { label: "Sound"; description: "Display volume and mute control"; enabled: true; checked: Local.Settings.showAudio; onToggled: value => { Local.Settings.showAudio = value; Local.Settings.save() } }
                     SettingRow { label: "Brightness"; description: "Display brightness control"; enabled: true; checked: Local.Settings.showBrightness; onToggled: value => { Local.Settings.showBrightness = value; Local.Settings.save() } }
                     SettingRow { label: "Battery"; description: "Display battery percentage"; enabled: true; checked: Local.Settings.showBattery; onToggled: value => { Local.Settings.showBattery = value; Local.Settings.save() } }

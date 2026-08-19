@@ -222,7 +222,7 @@ PanelWindow {
             spacing: 8
 
             Pill {
-                visible: root.showSystemStatus
+                visible: root.showMonitorStatus
                 width: monitorRow.width + 22
 
                 Row {
@@ -259,11 +259,43 @@ PanelWindow {
                         StatusMetric { visible: Settings.networkMode !== "upload"; icon: "󰇚"; value: root.networkSpeed(SystemMonitor.download) }
                         StatusMetric { visible: Settings.networkMode !== "download"; icon: "󰕒"; value: root.networkSpeed(SystemMonitor.upload) }
                     }
+                }
+            }
 
-                    Components.AiUsage {
-                        visible: Settings.showAiUsage
+            Pill {
+                id: aiUsagePill
+                visible: Settings.showAiUsage
+                width: aiUsageContent.implicitWidth + 20
+                color: aiMouse.containsMouse ? Theme.background : Theme.surface
+                border.color: aiMouse.containsMouse ? Theme.highlight : Theme.accent
+                border.width: 1
+
+                Behavior on color { ColorAnimation { duration: 120 } }
+                Behavior on border.color { ColorAnimation { duration: 120 } }
+
+                Components.AiUsage {
+                    id: aiUsageContent
+                    anchors.centerIn: parent
+                }
+
+                MouseArea {
+                    id: aiMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
+                    onClicked: mouse => {
+                        if (mouse.button === Qt.MiddleButton) {
+                            AgentUsage.selectProvider(AgentUsage.selectedProviderIndex + 1)
+                        } else {
+                            const pos = aiUsagePill.mapToItem(null, aiUsagePill.width / 2, 0)
+                            aiProc.command = ["qs", "ipc", "call", "aiUsage", "toggle", Math.round(pos.x)]
+                            aiProc.running = true
+                        }
                     }
                 }
+
+                Process { id: aiProc }
             }
 
             Pill {

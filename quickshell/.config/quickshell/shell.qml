@@ -49,7 +49,23 @@ ShellRoot {
             aiUsagePanel.anchorX = anchorX
             aiUsagePanel.toggle()
         }
+        function open(anchorX: int): void {
+            root.aiUsageAnchorX = anchorX
+            aiUsagePanel.anchorX = anchorX
+            if (!aiUsagePanel.open) aiUsagePanel.toggle()
+        }
+        function close(): void { aiUsagePanel.close() }
         function refresh(): void { aiUsagePanel.refresh(true) }
+        function next(): void { aiUsagePanel.selectProvider(aiUsagePanel.providerIndex + 1) }
+    }
+
+    IpcHandler {
+        target: "agents"
+        function toggle(): void { aiUsagePanel.toggle() }
+        function open(): void { if (!aiUsagePanel.open) aiUsagePanel.toggle() }
+        function close(): void { aiUsagePanel.close() }
+        function refresh(): void { aiUsagePanel.refresh(true) }
+        function next(): void { aiUsagePanel.selectProvider(aiUsagePanel.providerIndex + 1) }
     }
 
     Loader {

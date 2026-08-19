@@ -24,10 +24,14 @@ Item {
     property bool showTemperature: true
     property bool showNetwork: true
     property bool showAiUsage: true
-    property string aiUsageProviders: "claude,codex,cursor,antigravity,copilot,grok,opencode"
+    property string aiUsageProviders: "claude,codex,fireworks,antigravity,cursor,copilot,grok,opencode"
     property string aiUsageBarProviders: aiUsageProviders
     property string aiUsagePanelProviders: aiUsageProviders
-    property int aiUsageRefreshMinutes: 5
+    property int aiUsageRefreshMinutes: 15
+    property string aiUsageSyncMode: "Off"
+    property string aiUsageSyncDir: ""
+    property string aiUsageSyncFileName: ""
+    property string aiUsageSyncDeviceId: ""
     readonly property string activeAiUsageProviders: {
         const providers = []
         const enabled = (aiUsageBarProviders + "," + aiUsagePanelProviders).split(",")
@@ -92,7 +96,11 @@ Item {
                 if (pair[0] === "aiUsageProviders") settings.aiUsageProviders = pair[1]
                 if (pair[0] === "aiUsageBarProviders") settings.aiUsageBarProviders = pair[1]
                 if (pair[0] === "aiUsagePanelProviders") settings.aiUsagePanelProviders = pair[1]
-                if (pair[0] === "aiUsageRefreshMinutes") settings.aiUsageRefreshMinutes = Math.max(1, Math.min(60, Number(pair[1]) || 5))
+                if (pair[0] === "aiUsageRefreshMinutes") settings.aiUsageRefreshMinutes = Math.max(1, Math.min(60, Number(pair[1]) || 15))
+                if (pair[0] === "aiUsageSyncMode") settings.aiUsageSyncMode = pair[1] === "On" ? "On" : "Off"
+                if (pair[0] === "aiUsageSyncDir") settings.aiUsageSyncDir = pair[1] || ""
+                if (pair[0] === "aiUsageSyncFileName") settings.aiUsageSyncFileName = pair[1] || ""
+                if (pair[0] === "aiUsageSyncDeviceId") settings.aiUsageSyncDeviceId = pair[1] || ""
                 if (pair[0] === "temperatureUnit") settings.temperatureUnit = pair[1] === "F" ? "F" : "C"
                 if (pair[0] === "networkMode") settings.networkMode = ["download", "upload", "both"].includes(pair[1]) ? pair[1] : "download"
                 if (pair[0] === "mediaPanelSize") settings.mediaPanelSize = Math.max(50, Math.min(200, Number(pair[1]) || 100))
@@ -120,7 +128,7 @@ Item {
     Process {
         id: saveProcess
         onExited: {
-            aiSaveProcess.command = ["sh", "-c", "tmp=$(mktemp); awk '!/^showAiUsage=|^aiUsageProviders=|^aiUsageBarProviders=|^aiUsagePanelProviders=|^aiUsageRefreshMinutes=/' \"$1\" > \"$tmp\" && printf 'showAiUsage=%s\\naiUsageProviders=%s\\naiUsageBarProviders=%s\\naiUsagePanelProviders=%s\\naiUsageRefreshMinutes=%s\\n' \"$2\" \"$3\" \"$4\" \"$5\" \"$6\" >> \"$tmp\" && mv \"$tmp\" \"$1\"", "ai-usage-settings", settings.path, settings.showAiUsage ? "true" : "false", settings.activeAiUsageProviders, settings.aiUsageBarProviders, settings.aiUsagePanelProviders, settings.aiUsageRefreshMinutes]
+            aiSaveProcess.command = ["sh", "-c", "tmp=$(mktemp); awk '!/^showAiUsage=|^aiUsageProviders=|^aiUsageBarProviders=|^aiUsagePanelProviders=|^aiUsageRefreshMinutes=|^aiUsageSyncMode=|^aiUsageSyncDir=|^aiUsageSyncFileName=|^aiUsageSyncDeviceId=/' \"$1\" > \"$tmp\" && printf 'showAiUsage=%s\\naiUsageProviders=%s\\naiUsageBarProviders=%s\\naiUsagePanelProviders=%s\\naiUsageRefreshMinutes=%s\\naiUsageSyncMode=%s\\naiUsageSyncDir=%s\\naiUsageSyncFileName=%s\\naiUsageSyncDeviceId=%s\\n' \"$2\" \"$3\" \"$4\" \"$5\" \"$6\" \"$7\" \"$8\" \"$9\" \"${10}\" >> \"$tmp\" && mv \"$tmp\" \"$1\"", "ai-usage-settings", settings.path, settings.showAiUsage ? "true" : "false", settings.activeAiUsageProviders, settings.aiUsageBarProviders, settings.aiUsagePanelProviders, settings.aiUsageRefreshMinutes, settings.aiUsageSyncMode, settings.aiUsageSyncDir, settings.aiUsageSyncFileName, settings.aiUsageSyncDeviceId]
             aiSaveProcess.running = true
         }
     }

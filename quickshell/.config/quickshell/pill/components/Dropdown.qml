@@ -61,7 +61,7 @@ Item {
         visible: height > 0
         clip: true
         radius: 11
-        color: Local.Theme.background
+        color: Local.Theme.light ? "#F5E6D3" : "#E6000000"
         border.color: Local.Theme.accent
         border.width: 1
 

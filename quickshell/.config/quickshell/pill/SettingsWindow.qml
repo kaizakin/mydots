@@ -755,6 +755,8 @@ FloatingWindow {
                         }
                     }
 
+                    SettingRow { label: "Synced aggregation"; description: "Merge agent usage records across multiple machines"; enabled: Local.Settings.showAiUsage; checked: Local.Settings.aiUsageSyncMode === "On"; onToggled: value => { Local.Settings.aiUsageSyncMode = value ? "On" : "Off"; Local.Settings.save() } }
+
                     Item {
                         width: parent.width
                         height: 20
@@ -771,8 +773,9 @@ FloatingWindow {
                         spacing: 2
                         AiProviderRow { providerId: "claude"; label: "Claude" }
                         AiProviderRow { providerId: "codex"; label: "Codex" }
-                        AiProviderRow { providerId: "cursor"; label: "Cursor" }
                         AiProviderRow { providerId: "antigravity"; label: "Antigravity" }
+                        AiProviderRow { providerId: "fireworks"; label: "Fireworks" }
+                        AiProviderRow { providerId: "cursor"; label: "Cursor" }
                         AiProviderRow { providerId: "copilot"; label: "GitHub Copilot" }
                         AiProviderRow { providerId: "grok"; label: "Grok" }
                         AiProviderRow { providerId: "opencode"; label: "OpenCode" }

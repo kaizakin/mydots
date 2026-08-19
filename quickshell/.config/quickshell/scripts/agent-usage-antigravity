@@ -1,0 +1,333 @@
+#!/usr/bin/python3
+"""Collect Google Antigravity CLI usage into display-ready JSON record."""
+
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import fcntl
+import hashlib
+import json
+import os
+import tempfile
+import time
+from pathlib import Path
+from typing import Any
+
+AGENT_ID = "antigravity"
+AGENT_NAME = "Antigravity"
+AUTH_HELP = "Run `agy` to authenticate."
+
+DEFAULT_DAILY_LIMIT = 1_000_000
+DEFAULT_SESSION_LIMIT = 1_000_000
+SCAN_REUSE_SECONDS = 20
+LIMITS_ONLY_REUSE_SECONDS = 900
+
+
+def brain_dir() -> Path:
+  return Path(os.environ.get("GEMINI_BRAIN_DIR", Path.home() / ".gemini" / "antigravity-cli" / "brain")).resolve()
+
+
+def antigravity_dir() -> Path:
+  return Path.home() / ".gemini" / "antigravity-cli"
+
+
+def cache_root() -> Path:
+  root = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "quickshell" / "agent-usage"
+  root.mkdir(parents=True, exist_ok=True)
+  return root
+
+
+def date_string(value: dt.date) -> str:
+  return value.strftime("%Y-%m-%d")
+
+
+def recent_date_strings() -> list[str]:
+  today = dt.datetime.now().date()
+  return [date_string(today - dt.timedelta(days=offset)) for offset in range(6, -1, -1)]
+
+
+def local_date_from_timestamp(value: str) -> str:
+  if not value:
+    return date_string(dt.datetime.now().date())
+  try:
+    parsed = dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
+    return date_string(parsed.astimezone().date())
+  except Exception:
+    return date_string(dt.datetime.now().date())
+
+
+def read_config_limits() -> tuple[int, int]:
+  daily_limit = DEFAULT_DAILY_LIMIT
+  session_limit = DEFAULT_SESSION_LIMIT
+  config_paths = [
+    Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "quickshell" / "agents" / "antigravity.json",
+    Path.home() / ".gemini" / "antigravity.json",
+  ]
+  for p in config_paths:
+    if p.is_file():
+      try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+        if isinstance(data, dict):
+          daily_limit = int(data.get("dailyTokenLimit") or data.get("dailyLimit") or daily_limit)
+          session_limit = int(data.get("sessionTokenLimit") or data.get("sessionLimit") or session_limit)
+      except Exception:
+        pass
+  return daily_limit, session_limit
+
+
+def scan_antigravity(brain: Path) -> dict[str, Any]:
+  if not brain.is_dir():
+    return {
+      "todayPrompts": 0,
+      "todaySessions": 0,
+      "todayTotalTokens": 0,
+      "todayTokensByModel": {},
+      "recentDays": [{"date": d, "messageCount": 0} for d in recent_date_strings()],
+      "totalPrompts": 0,
+      "totalSessions": 0,
+      "activeDays": 0,
+      "activeDates": [],
+      "modelUsage": {},
+      "latestSessionTokens": 0,
+    }
+
+  today_str = date_string(dt.datetime.now().date())
+  recent_dates = recent_date_strings()
+  daily_tokens: dict[str, int] = {d: 0 for d in recent_dates}
+  active_dates: set[str] = set()
+
+  total_prompts = 0
+  total_sessions = 0
+  today_prompts = 0
+  today_sessions = 0
+  today_total_tokens = 0
+  today_tokens_by_model: dict[str, int] = {}
+  model_usage: dict[str, dict[str, int]] = {}
+  latest_session_tokens = 0
+  latest_mtime = 0.0
+
+  cutoff = time.time() - 30 * 86400
+
+  try:
+    session_dirs = [p for p in brain.iterdir() if p.is_dir() and not p.name.startswith(".")]
+  except OSError:
+    session_dirs = []
+
+  for sdir in session_dirs:
+    transcript = sdir / ".system_generated" / "logs" / "transcript.jsonl"
+    if not transcript.is_file():
+      continue
+
+    try:
+      st = transcript.stat()
+      if st.st_mtime < cutoff:
+        continue
+      mtime = st.st_mtime
+    except OSError:
+      continue
+
+    total_sessions += 1
+    session_touched_today = False
+    session_model = "gemini-3.7-flash"
+    current_session_tokens = 0
+
+    try:
+      with open(transcript, "r", encoding="utf-8", errors="ignore") as f:
+        for line in f:
+          line = line.strip()
+          if not line or '"type"' not in line:
+            continue
+          try:
+            entry = json.loads(line)
+          except Exception:
+            continue
+
+          entry_type = entry.get("type")
+          created_at = entry.get("created_at", "")
+          entry_date = local_date_from_timestamp(created_at)
+
+          active_dates.add(entry_date)
+          if entry_date == today_str:
+            session_touched_today = True
+
+          if entry_type == "USER_INPUT":
+            total_prompts += 1
+            if entry_date == today_str:
+              today_prompts += 1
+
+          if "USER_SETTINGS_CHANGE" in entry.get("content", ""):
+            content_str = entry.get("content", "")
+            if "Gemini 3.7 Flash" in content_str:
+              session_model = "gemini-3.7-flash"
+            elif "Gemini 2.5 Pro" in content_str or "Gemini Pro" in content_str:
+              session_model = "gemini-2.5-pro"
+
+          content_len = len(entry.get("content", "") or "")
+          approx_tokens = max(10, content_len // 4)
+          current_session_tokens += approx_tokens
+
+          if entry_date in daily_tokens:
+            daily_tokens[entry_date] += approx_tokens
+
+          if session_model not in model_usage:
+            model_usage[session_model] = {
+              "inputTokens": 0,
+              "outputTokens": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+            }
+
+          if entry.get("source") == "USER_EXPLICIT":
+            model_usage[session_model]["inputTokens"] += approx_tokens
+          else:
+            model_usage[session_model]["outputTokens"] += approx_tokens
+
+          if entry_date == today_str:
+            today_total_tokens += approx_tokens
+            today_tokens_by_model[session_model] = today_tokens_by_model.get(session_model, 0) + approx_tokens
+
+    except Exception:
+      continue
+
+    if session_touched_today:
+      today_sessions += 1
+
+    if mtime > latest_mtime:
+      latest_mtime = mtime
+      latest_session_tokens = current_session_tokens
+
+  return {
+    "todayPrompts": today_prompts,
+    "todaySessions": today_sessions,
+    "todayTotalTokens": today_total_tokens,
+    "todayTokensByModel": today_tokens_by_model,
+    "recentDays": [{"date": d, "messageCount": daily_tokens.get(d, 0)} for d in recent_dates],
+    "totalPrompts": total_prompts,
+    "totalSessions": total_sessions,
+    "activeDays": len(active_dates),
+    "activeDates": sorted(list(active_dates)),
+    "modelUsage": model_usage,
+    "latestSessionTokens": latest_session_tokens,
+  }
+
+
+def scan_cache_paths() -> tuple[Path, Path]:
+  brain = brain_dir()
+  digest = hashlib.sha1(str(brain).encode("utf-8")).hexdigest()[:16]
+  root = cache_root()
+  return root / f"antigravity-scan-{digest}.json", root / f"antigravity-scan-{digest}.lock"
+
+
+def read_fresh_json(path: Path, max_age_seconds: float) -> dict[str, Any] | None:
+  if max_age_seconds <= 0 or not path.exists():
+    return None
+  try:
+    if 0 <= (time.time() - path.stat().st_mtime) <= max_age_seconds:
+      return json.loads(path.read_text(encoding="utf-8"))
+  except Exception:
+    return None
+  return None
+
+
+def write_json(path: Path, payload: dict[str, Any]) -> None:
+  handle_fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=path.name + ".", suffix=".tmp")
+  tmp = Path(tmp_name)
+  try:
+    with os.fdopen(handle_fd, "w", encoding="utf-8") as handle:
+      handle.write(json.dumps(payload, separators=(",", ":"), sort_keys=True) + "\n")
+    tmp.chmod(0o644)
+    tmp.replace(path)
+  except BaseException:
+    tmp.unlink(missing_ok=True)
+    raise
+
+
+def cached_scan(brain: Path, max_age_seconds: float) -> dict[str, Any]:
+  cache_file, lock_file = scan_cache_paths()
+  cached = read_fresh_json(cache_file, max_age_seconds)
+  if cached is not None:
+    return cached
+
+  try:
+    with lock_file.open("w") as lock:
+      fcntl.flock(lock, fcntl.LOCK_EX)
+      cached = read_fresh_json(cache_file, max_age_seconds)
+      if cached is not None:
+        return cached
+      summary = scan_antigravity(brain)
+      write_json(cache_file, summary)
+      return summary
+  except Exception:
+    return scan_antigravity(brain)
+
+
+def check_auth() -> tuple[bool, str, str]:
+  oauth_file = antigravity_dir() / "antigravity-oauth-token"
+  install_id = antigravity_dir() / "installation_id"
+  if oauth_file.is_file() or install_id.is_file():
+    return True, "", ""
+  return False, "Waiting for auth", AUTH_HELP
+
+
+def calculate_limits(stats: dict[str, Any]) -> list[dict[str, Any]]:
+  daily_limit, session_limit = read_config_limits()
+  today_tokens = int(stats.get("todayTotalTokens") or 0)
+  session_tokens = int(stats.get("latestSessionTokens") or 0)
+
+  daily_percent = min(1.0, today_tokens / max(1, daily_limit))
+  session_percent = min(1.0, session_tokens / max(1, session_limit))
+
+  # Resets at midnight UTC
+  today_utc = dt.datetime.now(dt.timezone.utc).date()
+  next_midnight = dt.datetime.combine(today_utc + dt.timedelta(days=1), dt.time.min, tzinfo=dt.timezone.utc)
+  resets_at = next_midnight.isoformat()
+
+  return [
+    {
+      "label": "Daily (24-hour)",
+      "title": "Daily",
+      "percent": round(daily_percent, 4),
+      "resetsAt": resets_at,
+    },
+    {
+      "label": "Session",
+      "title": "Session",
+      "percent": round(session_percent, 4),
+      "resetsAt": "",
+    },
+  ]
+
+
+def main() -> int:
+  parser = argparse.ArgumentParser()
+  parser.add_argument("--force", action="store_true")
+  parser.add_argument("--limits-only", action="store_true")
+  parser.add_argument("--cache-seconds", type=float, default=20)
+  args = parser.parse_args()
+
+  scan_age = 0 if args.force else (LIMITS_ONLY_REUSE_SECONDS if args.limits_only else args.cache_seconds)
+  stats = cached_scan(brain_dir(), scan_age)
+
+  auth_ok, status_text, help_text = check_auth()
+  limits = calculate_limits(stats)
+
+  record = {
+    "schemaVersion": 1,
+    "id": AGENT_ID,
+    "name": AGENT_NAME,
+    "updatedAt": dt.datetime.now(dt.timezone.utc).isoformat(),
+    "ready": stats.get("totalPrompts", 0) > 0 or stats.get("totalSessions", 0) > 0 or auth_ok,
+    "hasLocalStats": True,
+    "tierLabel": "Subscription",
+    "usageStatusText": status_text,
+    "authHelpText": help_text,
+    "limits": limits,
+  }
+  record.update(stats)
+  print(json.dumps(record, separators=(",", ":"), sort_keys=True))
+  return 0
+
+
+if __name__ == "__main__":
+  raise SystemExit(main())

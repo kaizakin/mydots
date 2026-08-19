@@ -2,3 +2,4 @@ singleton Theme 1.0 Theme.qml
 singleton SystemMonitor 1.0 SystemMonitor.qml
 singleton Settings 1.0 Settings.qml
 singleton Niri 1.0 Niri.qml
+singleton AgentUsage 1.0 AgentUsage.qml

@@ -365,7 +365,6 @@ FloatingWindow {
 
                     SidebarChild { visible: root.barExpanded; icon: "󰊤"; label: "AI Usage"; selected: root.page === "ai-usage"; onActivated: root.page = "ai-usage" }
                     SidebarChild { visible: root.barExpanded; icon: "󰃭"; label: "Date & Time"; selected: root.page === "clock"; onActivated: root.page = "clock" }
-                    SidebarChild { visible: root.barExpanded; icon: "󰍛"; label: "System status"; selected: root.page === "system"; onActivated: root.page = "system" }
 
                     SidebarItem {
                         icon: "󰒓"
@@ -703,7 +702,6 @@ FloatingWindow {
                     SettingRow { label: "Sound"; description: "Display volume and mute control"; enabled: true; checked: Local.Settings.showAudio; onToggled: value => { Local.Settings.showAudio = value; Local.Settings.save() } }
                     SettingRow { label: "Brightness"; description: "Display brightness control"; enabled: true; checked: Local.Settings.showBrightness; onToggled: value => { Local.Settings.showBrightness = value; Local.Settings.save() } }
                     SettingRow { label: "Battery"; description: "Display battery percentage"; enabled: true; checked: Local.Settings.showBattery; onToggled: value => { Local.Settings.showBattery = value; Local.Settings.save() } }
-                    SettingRow { label: "Control centre"; description: "Display the quick controls button"; enabled: true; checked: Local.Settings.showControlCenter; onToggled: value => { Local.Settings.showControlCenter = value; Local.Settings.save() } }
                 }
 
                 Column {
@@ -847,49 +845,6 @@ FloatingWindow {
                             Local.Settings.showSeconds = value
                             Local.Settings.save()
                         }
-                    }
-                }
-
-                Column {
-                    visible: root.page === "system"
-                    anchors.fill: parent
-                    spacing: root.settingSpacing
-
-                    Text {
-                        text: "System status"
-                        color: Local.Theme.text
-                        font.family: Local.Theme.font
-                        font.pixelSize: 20
-                        font.bold: true
-                    }
-
-                    Text {
-                        text: "Choose what appears in the bar"
-                        color: Local.Theme.muted
-                        font.family: Local.Theme.font
-                        font.pixelSize: 13
-                    }
-
-                    SettingRow { label: "CPU usage"; description: "Display processor load"; enabled: true; checked: Local.Settings.showCpu; onToggled: value => { Local.Settings.showCpu = value; Local.Settings.save() } }
-                    SettingRow { label: "RAM usage"; description: "Display memory use"; enabled: true; checked: Local.Settings.showMemory; onToggled: value => { Local.Settings.showMemory = value; Local.Settings.save() } }
-                    SettingRow { label: "Temperature"; description: "Display system temperature"; enabled: true; checked: Local.Settings.showTemperature; onToggled: value => { Local.Settings.showTemperature = value; Local.Settings.save() } }
-                    SettingRow { label: "Network speed"; description: "Display network throughput"; enabled: true; checked: Local.Settings.showNetwork; onToggled: value => { Local.Settings.showNetwork = value; Local.Settings.save() } }
-
-                    Item {
-                        z: temperatureDropdown.open ? 1 : 0
-                        width: parent.width
-                        height: root.dropdownRowHeight
-
-                        Text { anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter; text: "Temperature unit"; color: Local.Theme.text; font.family: Local.Theme.font; font.pixelSize: 14 }
-                        Components.Dropdown { id: temperatureDropdown; anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter; options: [{ label: "Celsius (°C)" }, { label: "Fahrenheit (°F)" }]; currentIndex: Local.Settings.temperatureUnit === "F" ? 1 : 0; onSelected: index => { Local.Settings.temperatureUnit = index === 1 ? "F" : "C"; Local.Settings.save() } }
-                    }
-
-                    Item {
-                        width: parent.width
-                        height: root.dropdownRowHeight
-
-                        Text { anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter; text: "Network display"; color: Local.Theme.text; font.family: Local.Theme.font; font.pixelSize: 14 }
-                        Components.Dropdown { anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter; options: [{ label: "Download" }, { label: "Upload" }, { label: "Both" }]; currentIndex: Local.Settings.networkMode === "download" ? 0 : Local.Settings.networkMode === "upload" ? 1 : 2; onSelected: index => { Local.Settings.networkMode = ["download", "upload", "both"][index]; Local.Settings.save() } }
                     }
                 }
 

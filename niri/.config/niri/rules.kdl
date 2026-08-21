@@ -18,6 +18,20 @@ window-rule {
     open-floating true
 }
 
+window-rule {
+    match app-id=r#"^(local\.)?bluetui$"#
+    open-floating true
+    default-column-width { fixed 680; }
+    default-window-height { fixed 420; }
+}
+
+window-rule {
+    match app-id=r#"^(local\.)?wlctl$"#
+    open-floating true
+    default-column-width { fixed 680; }
+    default-window-height { fixed 420; }
+}
+
 // Window rules let you adjust behavior for individual windows.
 // Find more information on the wiki:
 // https://niri-wm.github.io/niri/Configuration:-Window-Rules

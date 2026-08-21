@@ -18,11 +18,6 @@ Item {
     property bool showAudio: true
     property bool showBrightness: true
     property bool showBattery: true
-    property bool showControlCenter: true
-    property bool showCpu: true
-    property bool showMemory: true
-    property bool showTemperature: true
-    property bool showNetwork: true
     property bool showAiUsage: true
     property string aiUsageProviders: "claude,codex,fireworks,antigravity,cursor,copilot,grok,opencode"
     property string aiUsageBarProviders: aiUsageProviders
@@ -39,8 +34,6 @@ Item {
             if (enabled[i] && !providers.includes(enabled[i])) providers.push(enabled[i])
         return providers.join(",")
     }
-    property string temperatureUnit: "C"
-    property string networkMode: "download"
     property int mediaPanelSize: 100
     property int clipboardPanelSize: 100
     property int launcherPanelSize: 100
@@ -55,7 +48,7 @@ Item {
     readonly property string defaultPath: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/quickshell/pill-settings.default"
 
     function save() {
-        saveProcess.command = ["sh", "-c", "mkdir -p \"$(dirname \"$1\")\" && printf 'barRadius=%s\\npillRadius=%s\\nnotchMode=%s\\nshowDate=%s\\nshowTime=%s\\nshowSeconds=%s\\nshowTray=%s\\nshowWorkspaces=%s\\nshowAudio=%s\\nshowBrightness=%s\\nshowBattery=%s\\nshowControlCenter=%s\\nshowCpu=%s\\nshowMemory=%s\\nshowTemperature=%s\\nshowNetwork=%s\\ntemperatureUnit=%s\\nnetworkMode=%s\\nmediaPanelSize=%s\\nclipboardPanelSize=%s\\nlauncherPanelSize=%s\\nwallpaperPanelSize=%s\\nthemePanelSize=%s\\n' \"$2\" \"$3\" \"$4\" \"$5\" \"$6\" \"$7\" \"$8\" \"$9\" \"${10}\" \"${11}\" \"${12}\" \"${13}\" \"${14}\" \"${15}\" \"${16}\" \"${17}\" \"${18}\" \"${19}\" \"${20}\" \"${21}\" \"${22}\" \"${23}\" \"${24}\" > \"$1\"", "pill-settings", path, barRadius, pillRadius, notchMode ? "true" : "false", showDate ? "true" : "false", showTime ? "true" : "false", showSeconds ? "true" : "false", showTray ? "true" : "false", showWorkspaces ? "true" : "false", showAudio ? "true" : "false", showBrightness ? "true" : "false", showBattery ? "true" : "false", showControlCenter ? "true" : "false", showCpu ? "true" : "false", showMemory ? "true" : "false", showTemperature ? "true" : "false", showNetwork ? "true" : "false", temperatureUnit, networkMode, mediaPanelSize, clipboardPanelSize, launcherPanelSize, wallpaperPanelSize, themePanelSize]
+        saveProcess.command = ["sh", "-c", "mkdir -p \"$(dirname \"$1\")\" && printf 'barRadius=%s\\npillRadius=%s\\nnotchMode=%s\\nshowDate=%s\\nshowTime=%s\\nshowSeconds=%s\\nshowTray=%s\\nshowWorkspaces=%s\\nshowAudio=%s\\nshowBrightness=%s\\nshowBattery=%s\\nmediaPanelSize=%s\\nclipboardPanelSize=%s\\nlauncherPanelSize=%s\\nwallpaperPanelSize=%s\\nthemePanelSize=%s\\n' \"$2\" \"$3\" \"$4\" \"$5\" \"$6\" \"$7\" \"$8\" \"$9\" \"${10}\" \"${11}\" \"${12}\" \"${13}\" \"${14}\" \"${15}\" \"${16}\" \"${17}\" > \"$1\"", "pill-settings", path, barRadius, pillRadius, notchMode ? "true" : "false", showDate ? "true" : "false", showTime ? "true" : "false", showSeconds ? "true" : "false", showTray ? "true" : "false", showWorkspaces ? "true" : "false", showAudio ? "true" : "false", showBrightness ? "true" : "false", showBattery ? "true" : "false", mediaPanelSize, clipboardPanelSize, launcherPanelSize, wallpaperPanelSize, themePanelSize]
         saveProcess.running = true
     }
 
@@ -87,11 +80,6 @@ Item {
                 if (pair[0] === "showAudio") settings.showAudio = pair[1] !== "false"
                 if (pair[0] === "showBrightness") settings.showBrightness = pair[1] !== "false"
                 if (pair[0] === "showBattery") settings.showBattery = pair[1] !== "false"
-                if (pair[0] === "showControlCenter") settings.showControlCenter = pair[1] !== "false"
-                if (pair[0] === "showCpu") settings.showCpu = pair[1] !== "false"
-                if (pair[0] === "showMemory") settings.showMemory = pair[1] !== "false"
-                if (pair[0] === "showTemperature") settings.showTemperature = pair[1] !== "false"
-                if (pair[0] === "showNetwork") settings.showNetwork = pair[1] !== "false"
                 if (pair[0] === "showAiUsage") settings.showAiUsage = pair[1] !== "false"
                 if (pair[0] === "aiUsageProviders") settings.aiUsageProviders = pair[1]
                 if (pair[0] === "aiUsageBarProviders") settings.aiUsageBarProviders = pair[1]
@@ -101,8 +89,6 @@ Item {
                 if (pair[0] === "aiUsageSyncDir") settings.aiUsageSyncDir = pair[1] || ""
                 if (pair[0] === "aiUsageSyncFileName") settings.aiUsageSyncFileName = pair[1] || ""
                 if (pair[0] === "aiUsageSyncDeviceId") settings.aiUsageSyncDeviceId = pair[1] || ""
-                if (pair[0] === "temperatureUnit") settings.temperatureUnit = pair[1] === "F" ? "F" : "C"
-                if (pair[0] === "networkMode") settings.networkMode = ["download", "upload", "both"].includes(pair[1]) ? pair[1] : "download"
                 if (pair[0] === "mediaPanelSize") settings.mediaPanelSize = Math.max(50, Math.min(200, Number(pair[1]) || 100))
                 if (pair[0] === "clipboardPanelSize") settings.clipboardPanelSize = Math.max(50, Math.min(200, Number(pair[1]) || 100))
                 if (pair[0] === "launcherPanelSize") settings.launcherPanelSize = Math.max(50, Math.min(200, Number(pair[1]) || 100))

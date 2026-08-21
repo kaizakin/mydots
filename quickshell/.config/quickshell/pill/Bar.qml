@@ -24,17 +24,12 @@ PanelWindow {
     property date now: new Date()
     property string brightness: "--"
     signal trayMenuRequested(var item, int anchorX)
-    readonly property bool showMonitorStatus: Settings.showCpu || Settings.showMemory || Settings.showTemperature || Settings.showNetwork
-    readonly property bool showSystemStatus: root.showMonitorStatus || Settings.showAiUsage
-
-    Binding {
-        target: SystemMonitor
-        property: "barActive"
-        value: root.showMonitorStatus
-    }
-
-    function networkSpeed(value) {
-        return value >= 1024 ? (value / 1024).toFixed(1) + " MB/s" : Math.round(value) + " KB/s"
+    function horizontalBatteryIcon(percentage) {
+        if (percentage > 0.8) return ""
+        if (percentage > 0.6) return ""
+        if (percentage > 0.4) return ""
+        if (percentage > 0.15) return ""
+        return ""
     }
 
     // @note find the tray item under a global x so the tray menu can switch targets
@@ -46,11 +41,6 @@ PanelWindow {
                 return child
         }
         return null
-    }
-
-    function temperatureIcon(value) {
-        if (value < 0) return ""
-        return ["", "", "", "", ""][Math.min(4, Math.floor(value / 20))]
     }
 
     PwObjectTracker {
@@ -76,11 +66,51 @@ PanelWindow {
         onTriggered: root.now = new Date()
     }
 
+    property string wifiName: ""
+    property string bluetoothDevice: ""
+    property bool bluetoothPowered: true
+
+    Process {
+        id: netStatusProcess
+        command: ["sh", "-c", "wifi=$(nmcli -t -f NAME,TYPE c show --active 2>/dev/null | grep -E ':802-11-wireless|:gsm|:cdma|:802-3-ethernet' | head -n 1 | cut -d: -f1); bt=$(bluetoothctl devices Connected 2>/dev/null | head -n 1 | cut -d ' ' -f 3-); bt_powered=$(bluetoothctl show 2>/dev/null | grep -q 'Powered: yes' && echo '1' || echo '0'); printf 'wifi=%s\\nbt=%s\\nbt_powered=%s\\n' \"$wifi\" \"$bt\" \"$bt_powered\""]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const lines = this.text.trim().split("\n")
+                for (let i = 0; i < lines.length; i++) {
+                    const pair = lines[i].split("=")
+                    if (pair[0] === "wifi") root.wifiName = pair.slice(1).join("=")
+                    if (pair[0] === "bt") root.bluetoothDevice = pair.slice(1).join("=")
+                    if (pair[0] === "bt_powered") root.bluetoothPowered = pair[1] === "1"
+                }
+            }
+        }
+    }
+
+    Process {
+        id: wlctlProcess
+        command: ["kitty", "--class=local.wlctl", "-e", "wlctl"]
+        onExited: netStatusProcess.running = true
+    }
+
+    Process {
+        id: bluetuiProcess
+        command: ["kitty", "--class=local.bluetui", "-e", "bluetui"]
+        onExited: netStatusProcess.running = true
+    }
+
     Timer {
         interval: 10000
         running: true
         repeat: true
         onTriggered: brightnessProcess.running = true
+    }
+
+    Timer {
+        interval: 5000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: netStatusProcess.running = true
     }
 
     component Pill: Rectangle {
@@ -89,33 +119,7 @@ PanelWindow {
         height: root.pillHeight
     }
 
-    component StatusMetric: Item {
-        required property string icon
-        required property string value
-        implicitWidth: iconText.implicitWidth + 4 + valueText.implicitWidth
-        implicitHeight: 20
 
-        Text {
-            id: iconText
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
-            text: parent.icon
-            color: Theme.secondaryText
-            font.family: Theme.font
-            font.pixelSize: 15
-        }
-
-        Text {
-            id: valueText
-            anchors.left: iconText.right
-            anchors.leftMargin: 4
-            anchors.verticalCenter: parent.verticalCenter
-            text: parent.value
-            color: Theme.secondaryText
-            font.family: Theme.font
-            font.pixelSize: 12
-        }
-    }
 
 
     Item {
@@ -221,46 +225,7 @@ PanelWindow {
             anchors.topMargin: 8
             spacing: 8
 
-            Pill {
-                visible: root.showMonitorStatus
-                width: monitorRow.width + 22
 
-                Row {
-                    id: monitorRow
-                    anchors.centerIn: parent
-                    spacing: 10
-
-                    StatusMetric {
-                        visible: Settings.showCpu
-                        icon: "󰻠"
-                        value: SystemMonitor.cpu + "%"
-                    }
-
-                    StatusMetric {
-                        visible: Settings.showMemory
-                        icon: "󰍛"
-                        value: SystemMonitor.memory + "%"
-                    }
-
-                    StatusMetric {
-                        visible: Settings.showTemperature
-                        icon: root.temperatureIcon(SystemMonitor.temperature)
-                        value: {
-                            if (SystemMonitor.temperature < 0)
-                                return "--"
-                            const value = Settings.temperatureUnit === "F" ? Math.round(SystemMonitor.temperature * 9 / 5 + 32) : SystemMonitor.temperature
-                            return value + "°" + Settings.temperatureUnit
-                        }
-                    }
-
-                    Row {
-                        visible: Settings.showNetwork
-                        spacing: 4
-                        StatusMetric { visible: Settings.networkMode !== "upload"; icon: "󰇚"; value: root.networkSpeed(SystemMonitor.download) }
-                        StatusMetric { visible: Settings.networkMode !== "download"; icon: "󰕒"; value: root.networkSpeed(SystemMonitor.upload) }
-                    }
-                }
-            }
 
             Pill {
                 id: aiUsagePill
@@ -296,6 +261,115 @@ PanelWindow {
                 }
 
                 Process { id: aiProc }
+            }
+
+            Pill {
+                id: netBtPill
+                width: netBtRow.width + 20
+
+                Row {
+                    id: netBtRow
+                    anchors.centerIn: parent
+                    spacing: 12
+
+                    Item {
+                        id: btItem
+                        width: btRow.width
+                        height: 20
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        Row {
+                            id: btRow
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 5
+
+                            Text {
+                                text: !root.bluetoothPowered ? "󰂲" : (root.bluetoothDevice !== "" ? "󰂱" : "󰂯")
+                                color: btMouse.containsMouse ? Theme.highlight : (!root.bluetoothPowered ? Theme.muted : (root.bluetoothDevice !== "" ? Theme.text : Theme.secondaryText))
+                                font.family: Theme.font
+                                font.pixelSize: 13
+                            }
+
+                            Text {
+                                text: root.bluetoothDevice !== "" ? (root.bluetoothDevice.length > 12 ? root.bluetoothDevice.slice(0, 11) + "…" : root.bluetoothDevice) : "--"
+                                color: btMouse.containsMouse ? Theme.highlight : (root.bluetoothDevice !== "" ? Theme.secondaryText : Theme.muted)
+                                font.family: Theme.font
+                                font.pixelSize: 12
+                            }
+                        }
+
+                        MouseArea {
+                            id: btMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: bluetuiProcess.running = true
+                        }
+                    }
+
+                    Item {
+                        id: wifiItem
+                        width: wifiRow.width
+                        height: 20
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        Row {
+                            id: wifiRow
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 5
+
+                            Text {
+                                text: root.wifiName !== "" ? "󰤨" : "󰖪"
+                                color: wifiMouse.containsMouse ? Theme.highlight : (root.wifiName !== "" ? Theme.text : Theme.muted)
+                                font.family: Theme.font
+                                font.pixelSize: 13
+                            }
+
+                            Text {
+                                text: root.wifiName !== "" ? (root.wifiName.length > 14 ? root.wifiName.slice(0, 13) + "…" : root.wifiName) : "--"
+                                color: wifiMouse.containsMouse ? Theme.highlight : (root.wifiName !== "" ? Theme.secondaryText : Theme.muted)
+                                font.family: Theme.font
+                                font.pixelSize: 12
+                            }
+                        }
+
+                        MouseArea {
+                            id: wifiMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: wlctlProcess.running = true
+                        }
+                    }
+                }
+            }
+
+            Pill {
+                visible: Settings.showDate || Settings.showTime
+                width: clockRow.width + 22
+
+                Row {
+                    id: clockRow
+                    anchors.centerIn: parent
+                    spacing: 10
+
+                    Text {
+                        visible: Settings.showDate
+                        text: "󰃭 " + Qt.formatDate(root.now, "dd:MM")
+                        color: Theme.muted
+                        font.family: Theme.font
+                        font.pixelSize: 12
+                    }
+
+                    Text {
+                        visible: Settings.showTime
+                        text: "󰥔 " + Qt.formatTime(root.now, Settings.showSeconds ? "hh:mm:ss AP" : "hh:mm AP")
+                        color: Theme.text
+                        font.family: Theme.font
+                        font.pixelSize: 12
+                        font.bold: true
+                    }
+                }
             }
 
             Pill {
@@ -358,64 +432,45 @@ PanelWindow {
                         }
                     }
 
-                    Text {
+                    Row {
+                        id: batteryItem
                         visible: Settings.showBattery && UPower.displayDevice !== null
-                        text: "󰁹 " + Math.round((UPower.displayDevice?.percentage ?? 0) * 100) + "%"
-                        color: Theme.text
-                        font.family: Theme.font
-                        font.pixelSize: 12
+                        spacing: 4
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        readonly property real percentage: UPower.displayDevice?.percentage ?? 0
+                        readonly property bool isCharging: {
+                            const dev = UPower.displayDevice
+                            if (!dev) return false
+                            return dev.state === UPowerDeviceState.Charging || dev.state === UPowerDeviceState.FullyCharged || dev.state === UPowerDeviceState.PendingCharge || dev.state == 1 || dev.state == 4 || dev.state == 5
+                        }
+                        readonly property color batteryColor: isCharging ? (Theme.light ? "#16a34a" : "#4ade80") : (percentage <= 0.2 ? Theme.danger : Theme.text)
+
+                        Text {
+                            visible: batteryItem.isCharging
+                            text: "󱐋"
+                            color: batteryItem.batteryColor
+                            font.family: Theme.font
+                            font.pixelSize: 12
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Text {
+                            text: root.horizontalBatteryIcon(batteryItem.percentage)
+                            color: batteryItem.batteryColor
+                            font.family: Theme.font
+                            font.pixelSize: 12
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Text {
+                            text: Math.round(batteryItem.percentage * 100) + "%"
+                            color: batteryItem.batteryColor
+                            font.family: Theme.font
+                            font.pixelSize: 12
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
                     }
-                }
-            }
-
-            Pill {
-                visible: Settings.showDate || Settings.showTime
-                width: clockRow.width + 22
-
-                Row {
-                    id: clockRow
-                    anchors.centerIn: parent
-                    spacing: 10
-
-                    Text {
-                        visible: Settings.showDate
-                        text: "󰃭 " + Qt.formatDate(root.now, "dd:MM")
-                        color: Theme.muted
-                        font.family: Theme.font
-                        font.pixelSize: 12
-                    }
-
-                    Text {
-                        visible: Settings.showTime
-                        text: "󰥔 " + Qt.formatTime(root.now, Settings.showSeconds ? "hh:mm:ss AP" : "hh:mm AP")
-                        color: Theme.text
-                        font.family: Theme.font
-                        font.pixelSize: 12
-                        font.bold: true
-                    }
-                }
-            }
-
-            Pill {
-                visible: Settings.showControlCenter
-                width: 30
-
-                Text {
-                    anchors.centerIn: parent
-                    text: "󰍜"
-                    color: Theme.text
-                    font.family: Theme.font
-                    font.pixelSize: 13
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: controlCenterProcess.running = true
-                }
-
-                Process {
-                    id: controlCenterProcess
-                    command: ["qs", "ipc", "call", "controlCenter", "toggle"]
                 }
             }
         }

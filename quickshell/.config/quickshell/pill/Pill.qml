@@ -55,7 +55,6 @@ PanelWindow {
     readonly property var filteredApplications: filterApplications(launcherQuery)
     readonly property var selectedApplication: filteredApplications.length > 0 ? filteredApplications[launcherIndex] : null
     property bool calendarOpen: false
-    property bool systemOpen: false
     property bool emojiPickerOpen: false
     property bool recorderOpen: false
     property bool recording: false
@@ -70,7 +69,7 @@ PanelWindow {
     readonly property var filteredClipboard: filterClipboard(clipboardQuery)
     readonly property var selectedClipboard: filteredClipboard.length > 0 ? filteredClipboard[clipboardIndex] : null
     readonly property bool expanded: panelOpen || ((hasMedia || idleMedia) && islandHover.hovered && !pillNotification)
-    readonly property bool panelOpen: themePickerOpen || wallpaperPickerOpen || clipboardPickerOpen || launcherOpen || calendarOpen || systemOpen || emojiPickerOpen || recorderOpen
+    readonly property bool panelOpen: themePickerOpen || wallpaperPickerOpen || clipboardPickerOpen || launcherOpen || calendarOpen || emojiPickerOpen || recorderOpen
 
     function closePanels() {
         themePickerOpen = false
@@ -78,7 +77,6 @@ PanelWindow {
         clipboardPickerOpen = false
         launcherOpen = false
         calendarOpen = false
-        systemOpen = false
         emojiPickerOpen = false
         recorderOpen = false
         emojiEntries = []
@@ -100,7 +98,6 @@ PanelWindow {
                 || (panel === "clipboard" && clipboardPickerOpen)
                 || (panel === "launcher" && launcherOpen)
                 || (panel === "calendar" && calendarOpen)
-                || (panel === "system" && systemOpen)
                 || (panel === "emoji" && emojiPickerOpen)
                 || (panel === "recorder" && recorderOpen)
         closePanels()
@@ -111,7 +108,6 @@ PanelWindow {
         else if (panel === "clipboard") clipboardPickerOpen = true
         else if (panel === "launcher") launcherOpen = true
         else if (panel === "calendar") calendarOpen = true
-        else if (panel === "system") systemOpen = true
         else if (panel === "emoji") emojiPickerOpen = true
         else if (panel === "recorder") recorderOpen = true
     }
@@ -307,10 +303,6 @@ PanelWindow {
         if (calendarOpen) {
             calendarMonth = new Date()
         }
-    }
-
-    function openSystem() {
-        togglePanel("system")
     }
 
     onLauncherQueryChanged: launcherIndex = 0
@@ -591,7 +583,6 @@ PanelWindow {
 
         readonly property real idleWidth: Local.Settings.notchMode || root.hasMedia ? 260 : 180
         readonly property real targetWidth: {
-            if (root.systemOpen) return 520
             if (root.launcherOpen) return 520 * Local.Settings.launcherPanelSize / 100
             if (root.clipboardPickerOpen) return 520 * Local.Settings.clipboardPanelSize / 100
             if (root.emojiPickerOpen) return 430
@@ -606,7 +597,6 @@ PanelWindow {
             return 180
         }
         readonly property real targetHeight: {
-            if (root.systemOpen) return 340
             if (root.calendarOpen) return 300
             if (root.launcherOpen) return 400 * Local.Settings.launcherPanelSize / 100
             if (root.clipboardPickerOpen) return 400 * Local.Settings.clipboardPanelSize / 100
@@ -710,7 +700,7 @@ PanelWindow {
             anchors.left: parent.left
             anchors.leftMargin: 12
             anchors.verticalCenter: parent.verticalCenter
-            visible: !root.hasMedia && !root.expanded && !root.themePickerOpen && !root.wallpaperPickerOpen && !root.clipboardPickerOpen && !root.launcherOpen && !root.calendarOpen && !root.systemOpen && !root.emojiPickerOpen && !root.pillNotification
+            visible: !root.hasMedia && !root.expanded && !root.themePickerOpen && !root.wallpaperPickerOpen && !root.clipboardPickerOpen && !root.launcherOpen && !root.calendarOpen && !root.emojiPickerOpen && !root.pillNotification
             text: ""
             color: root.recording ? Local.Theme.danger : Local.Theme.subtleMuted
             font.family: Local.Theme.font
@@ -850,14 +840,6 @@ PanelWindow {
                     contentScale: details.contentScale
                     onActivated: root.openCalendar()
                 }
-
-                Control {
-                    icon: "󰍛"
-                    enabled: true
-                    highlighted: true
-                    contentScale: details.contentScale
-                    onActivated: root.openSystem()
-                }
             }
 
             Control {
@@ -902,12 +884,6 @@ PanelWindow {
             active: root.calendarOpen
             anchors.fill: parent
             sourceComponent: Component { CalendarPanel { pill: root; morphCloseness: island.morphCloseness } }
-        }
-
-        Loader {
-            active: root.systemOpen
-            anchors.fill: parent
-            sourceComponent: Component { SystemPanel { pill: root; morphCloseness: island.morphCloseness } }
         }
 
         Loader {

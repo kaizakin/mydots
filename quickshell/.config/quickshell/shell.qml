@@ -7,7 +7,6 @@ import "pill" as Pill
 ShellRoot {
     id: root
 
-    property bool controlCenterLoaded: false
     property bool powerMenuLoaded: false
     property bool settingsLoaded: false
     property int aiUsageAnchorX: 0
@@ -33,14 +32,6 @@ ShellRoot {
         }
     }
     Pill.KeystrokeOverlay {}
-
-    Loader {
-        id: controlCenterLoader
-        active: root.controlCenterLoaded
-        sourceComponent: Component {
-            Pill.ControlCenter { onDismissed: root.controlCenterLoaded = false }
-        }
-    }
 
     IpcHandler {
         target: "aiUsage"
@@ -109,18 +100,6 @@ ShellRoot {
     }
 
     IpcHandler {
-        target: "controlCenter"
-        function toggle(): void {
-            if (controlCenterLoader.item)
-                controlCenterLoader.item.toggle()
-            else {
-                root.controlCenterLoaded = true
-                controlCenterOpenTimer.restart()
-            }
-        }
-    }
-
-    IpcHandler {
         target: "pillSettings"
         function toggle(): void {
             if (settingsLoader.item)
@@ -139,11 +118,5 @@ ShellRoot {
                 root.settingsLoaded = true
             }
         }
-    }
-
-    Timer {
-        id: controlCenterOpenTimer
-        interval: 0
-        onTriggered: controlCenterLoader.item?.toggle()
     }
 }

@@ -19,7 +19,7 @@ Item {
     property bool showBrightness: true
     property bool showBattery: true
     property bool showAiUsage: true
-    property string aiUsageProviders: "claude,codex,fireworks,antigravity,cursor,copilot,grok,opencode"
+    property string aiUsageProviders: "claude,codex,antigravity,cursor,copilot,grok,opencode"
     property string aiUsageBarProviders: aiUsageProviders
     property string aiUsagePanelProviders: aiUsageProviders
     property int aiUsageRefreshMinutes: 15

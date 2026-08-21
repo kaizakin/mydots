@@ -844,7 +844,6 @@ Item {
         return ({
             claude: "#DE7356",
             codex: "#10A37F",
-            fireworks: "#F87171",
             antigravity: "#4285F4",
             cursor: "#38BDF8",
             copilot: "#A855F7",

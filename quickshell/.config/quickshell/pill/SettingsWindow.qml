@@ -772,7 +772,6 @@ FloatingWindow {
                         AiProviderRow { providerId: "claude"; label: "Claude" }
                         AiProviderRow { providerId: "codex"; label: "Codex" }
                         AiProviderRow { providerId: "antigravity"; label: "Antigravity" }
-                        AiProviderRow { providerId: "fireworks"; label: "Fireworks" }
                         AiProviderRow { providerId: "cursor"; label: "Cursor" }
                         AiProviderRow { providerId: "copilot"; label: "GitHub Copilot" }
                         AiProviderRow { providerId: "grok"; label: "Grok" }

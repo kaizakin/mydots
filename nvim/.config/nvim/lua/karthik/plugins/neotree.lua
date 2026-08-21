@@ -63,18 +63,20 @@ return {
 		config = function(_, opts)
 			require("neo-tree").setup(opts)
 
-			-- Open neo-tree automatically, rooted at the directory nvim was started in
-			-- (cd into it first if nvim was launched with a directory argument, e.g. `nvim .`)
+			-- If nvim was opened with a directory argument (e.g. `nvim .` or `nvim /path/to/dir`),
+			-- change working directory to that folder and open neo-tree.
+			-- If opened with a file or without arguments, neo-tree will NOT open automatically.
 			vim.api.nvim_create_autocmd("VimEnter", {
 				callback = function()
 					if vim.fn.argc() == 1 then
 						local arg = vim.fn.argv(0)
-						local stat = vim.uv.fs_stat(arg)
-						if stat and stat.type == "directory" then
-							vim.cmd.cd(arg)
+						local expanded = vim.fn.expand(arg)
+						if vim.fn.isdirectory(expanded) == 1 then
+							local dir = vim.fn.fnamemodify(expanded, ":p")
+							vim.cmd.cd(vim.fn.fnameescape(dir))
+							require("neo-tree.command").execute({ action = "show", dir = dir })
 						end
 					end
-					require("neo-tree.command").execute({ action = "show", dir = vim.fn.getcwd() })
 				end,
 			})
 		end,

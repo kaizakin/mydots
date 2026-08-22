@@ -167,7 +167,7 @@ alias tmuxconf='neovide ~/.tmux.conf'
 alias ghosttyconf='neovide ~/.config/ghostty'
 
 # add dotfiles folder alias
-alias dots='nvim ~/mydots/'
+alias dots='nvim ~/dotfiles/'
 
 # lazy aliases
 # alias deidocker='sudo systemctl start docker'

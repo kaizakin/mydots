@@ -15,7 +15,7 @@ binds {
 
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     Mod+Return hotkey-overlay-title="Open a Terminal: kitty" { spawn "kitty"; }
-    Mod+Space hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
+    Mod+Space hotkey-overlay-title="Run an Application: fuzzel" { spawn "vicinae" "toggle"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
 
     // Use spawn-sh to run a shell command. Do this if you need pipes, multiple commands, etc.
@@ -263,7 +263,7 @@ binds {
     // Mod+Shift+Space { switch-layout "prev"; }
 
     // Print { screenshot; }
-    Print { spawn "sh" "-c" "grim -g \"$(slurp)\" - | satty --filename -"; }
+    Print { spawn-sh "omasnap"; }
     Ctrl+Print { screenshot-screen; }
     Alt+Print { screenshot-window; }
 

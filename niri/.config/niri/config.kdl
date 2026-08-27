@@ -42,7 +42,7 @@ input {
     touchpad {
         // off
         tap
-        // dwt
+        dwt // reject touchpad input when keys are currently being pressed
         // dwtp
         // drag false
         // drag-lock

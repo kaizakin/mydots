@@ -519,6 +519,18 @@ def _cached_local_stats(max_age):
     return stats
 
 
+def rpc_ids_equal(left, right):
+  if left == right:
+    return True
+  return str(left) == str(right)
+
+
+def rpc_error_text(error):
+  if isinstance(error, dict):
+    return str(error.get("message") or error.get("data") or error)
+  return str(error)
+
+
 def rpc_request(proc, request_id, method, params=None, timeout=8):
   payload = {"id": request_id, "method": method, "params": params or {}}
   proc.stdin.write(json.dumps(payload) + "\n")
@@ -535,32 +547,164 @@ def rpc_request(proc, request_id, method, params=None, timeout=8):
       message = json.loads(line)
     except Exception:
       continue
-    if message.get("id") == request_id:
-      return message
-  raise TimeoutError(method)
+    if not rpc_ids_equal(message.get("id"), request_id):
+      continue
+    if message.get("error"):
+      raise RuntimeError(rpc_error_text(message.get("error")))
+    return message
+  raise TimeoutError(f"{method} timed out")
 
 
-def limit_window(window):
+def used_percent(window):
   if not isinstance(window, dict):
     return None
-  used = window.get("usedPercent")
+  for key in ("usedPercent", "used_percent", "utilization", "percent"):
+    if window.get(key) is not None:
+      try:
+        value = float(window.get(key))
+      except (TypeError, ValueError):
+        continue
+      if value < 0:
+        continue
+      return value / 100.0 if value > 1 else value
+  used = window.get("used")
+  limit = window.get("limit") or window.get("allowed")
+  try:
+    used_n = float(used)
+    limit_n = float(limit)
+  except (TypeError, ValueError):
+    return None
+  if limit_n <= 0:
+    return None
+  return max(0.0, min(1.0, used_n / limit_n))
+
+
+def reset_at_iso(value):
+  if value is None or value == "":
+    return ""
+  if isinstance(value, (int, float)):
+    ts = float(value)
+    if ts > 1e12:
+      ts /= 1000.0
+    try:
+      return datetime.fromtimestamp(ts, timezone.utc).isoformat()
+    except (OverflowError, OSError, ValueError):
+      return ""
+  raw = str(value).strip()
+  if raw.isdigit():
+    return reset_at_iso(int(raw))
+  try:
+    parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    if parsed.tzinfo is None:
+      parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.isoformat()
+  except Exception:
+    return raw
+
+
+def limit_window(window, fallback_label="Limit"):
+  if not isinstance(window, dict):
+    return None
+  used = used_percent(window)
   if used is None:
     return None
-  mins = number(window.get("windowDurationMins"))
-  if mins == 10080:
-    label = "Weekly (7-day)"
-  elif mins and mins % 60 == 0:
-    label = f"{mins // 60}h window"
-  elif mins:
-    label = f"{mins}m window"
-  else:
-    label = "Limit"
-  reset = window.get("resetsAt")
+  mins = number(
+    window.get("windowDurationMins")
+    or window.get("window_duration_mins")
+    or window.get("durationMins")
+    or window.get("duration_mins")
+  )
+  label = str(
+    window.get("label")
+    or window.get("name")
+    or window.get("limitId")
+    or window.get("limit_id")
+    or ""
+  ).strip()
+  if not label:
+    if mins == 10080:
+      label = "Weekly (7-day)"
+    elif mins in (43200, 43800):
+      label = "Monthly (30-day)"
+    elif mins and mins % 60 == 0:
+      label = f"{mins // 60}h window"
+    elif mins:
+      label = f"{mins}m window"
+    else:
+      label = fallback_label
+  reset = window.get("resetsAt") or window.get("resets_at") or window.get("resetAt")
   return {
     "label": label,
-    "percent": float(used) / 100.0,
-    "resetsAt": datetime.fromtimestamp(number(reset), timezone.utc).isoformat() if reset else "",
+    "percent": used,
+    "resetsAt": reset_at_iso(reset),
   }
+
+
+def parse_rate_limits(payload):
+  result = {"limits": [], "plan": ""}
+  if not isinstance(payload, dict):
+    return result
+  nested = payload.get("result") if isinstance(payload.get("result"), dict) else payload
+  limits = nested.get("rateLimits")
+  if limits is None:
+    limits = nested.get("rate_limits")
+  snapshots = nested.get("rateLimitsByLimitId") or nested.get("rate_limits_by_limit_id") or {}
+
+  if isinstance(limits, dict):
+    result["plan"] = str(limits.get("planType") or limits.get("plan_type") or "")
+    for key, fallback in (("primary", "Primary"), ("secondary", "Secondary")):
+      entry = limit_window(limits.get(key), fallback)
+      if entry:
+        result["limits"].append(entry)
+    if not result["limits"]:
+      for key, snap in limits.items():
+        if key in ("planType", "plan_type"):
+          continue
+        entry = limit_window(snap, str(key) or "Limit")
+        if entry:
+          result["limits"].append(entry)
+    return result
+
+  if isinstance(limits, list):
+    for index, snap in enumerate(limits):
+      entry = limit_window(snap, f"Limit {index + 1}")
+      if entry:
+        result["limits"].append(entry)
+  elif isinstance(snapshots, dict):
+    for key, snap in snapshots.items():
+      entry = limit_window(snap, str(key) or "Limit")
+      if entry:
+        result["limits"].append(entry)
+
+  return result
+
+
+def drain_stderr(proc):
+  if not proc.stderr:
+    return ""
+  chunks = []
+  try:
+    while True:
+      ready, _, _ = select.select([proc.stderr], [], [], 0)
+      if not ready:
+        break
+      line = proc.stderr.readline()
+      if not line:
+        break
+      chunks.append(line)
+  except Exception:
+    return "".join(chunks).strip()[:400]
+  return "".join(chunks).strip()[:400]
+
+
+def fail_codex(result, status, help_text, stderr=""):
+  result["usageStatusText"] = status
+  extra = stderr.strip()
+  text = help_text.strip() if help_text else ""
+  if extra and extra not in text:
+    text = (text + (": " if text else "") + extra) if text else extra
+  result["authHelpText"] = text[:400]
+  return result
 
 
 def fetch_codex_rpc():
@@ -569,49 +713,43 @@ def fetch_codex_rpc():
   if not codex:
     auth_file = Path.home() / ".codex" / "auth.json"
     if not auth_file.exists():
-      result["usageStatusText"] = "Waiting for auth"
-      result["authHelpText"] = AUTH_HELP
-    else:
-      result["usageStatusText"] = "Codex unavailable"
-      result["authHelpText"] = "Codex CLI not found in PATH"
-    return result
+      return fail_codex(result, "Waiting for auth", AUTH_HELP)
+    return fail_codex(result, "Codex unavailable", "Codex CLI not found in PATH")
 
   try:
     proc = subprocess.Popen(
-      [codex, "-s", "read-only", "-a", "untrusted", "app-server"],
+      [codex, "app-server"],
       stdin=subprocess.PIPE,
       stdout=subprocess.PIPE,
-      stderr=subprocess.DEVNULL,
+      stderr=subprocess.PIPE,
       text=True,
       env=ENV,
     )
   except Exception as exc:
-    result["usageStatusText"] = "Codex unavailable"
-    result["authHelpText"] = str(exc)
-    return result
+    return fail_codex(result, "Codex unavailable", str(exc))
 
   try:
-    rpc_request(proc, 1, "initialize", {"clientInfo": {"name": "omarchy-agent-usage", "version": "1"}}, timeout=6)
+    rpc_request(
+      proc,
+      1,
+      "initialize",
+      {"clientInfo": {"name": "omarchy-agent-usage", "version": "1"}},
+      timeout=12,
+    )
     proc.stdin.write(json.dumps({"method": "initialized", "params": {}}) + "\n")
     proc.stdin.flush()
-    account_msg = rpc_request(proc, 2, "account/read", timeout=4)
-    limits_msg = rpc_request(proc, 3, "account/rateLimits/read", timeout=4)
+    account_msg = rpc_request(proc, 2, "account/read", timeout=8)
+    limits_msg = rpc_request(proc, 3, "account/rateLimits/read", timeout=8)
 
     account = (account_msg.get("result") or {}).get("account") or {}
-    limits = (limits_msg.get("result") or {}).get("rateLimits") or {}
-    plan = limits.get("planType") or account.get("planType") or account.get("type") or ""
+    parsed = parse_rate_limits(limits_msg)
+    plan = parsed["plan"] or account.get("planType") or account.get("plan_type") or account.get("type") or ""
     result["tierLabel"] = str(plan) if plan else ""
-
-    for window in (limits.get("primary"), limits.get("secondary")):
-      entry = limit_window(window)
-      if entry:
-        result["limits"].append(entry)
-
+    result["limits"] = parsed["limits"]
     result["usageStatusText"] = ""
     result["authHelpText"] = ""
   except Exception as exc:
-    result["usageStatusText"] = "Codex limits unavailable"
-    result["authHelpText"] = str(exc)
+    fail_codex(result, "Codex limits unavailable", str(exc), drain_stderr(proc))
   finally:
     try:
       proc.terminate()

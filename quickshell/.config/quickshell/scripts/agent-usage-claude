@@ -34,6 +34,8 @@ AGENT_ID = "claude"
 AGENT_NAME = "Claude Code"
 AUTH_HELP = "Run `claude auth login` to restore authoritative usage."
 USAGE_ENDPOINT = "https://api.anthropic.com/api/oauth/usage"
+OAUTH_TOKEN_URL = "https://platform.claude.com/v1/oauth/token"
+OAUTH_CLIENT_ID = "9d1c250a-e61b-44d9-88ed-5944d1962f5e"
 PROBE_MIN_INTERVAL_SECONDS = 15
 
 
@@ -587,16 +589,119 @@ def merge_stats(base: dict[str, Any], extra: dict[str, Any]) -> dict[str, Any]:
 # CLI's login. Nothing else leaves the credential store: the token goes
 # nowhere but the Authorization header of the limits probe, and only the
 # plan label may travel into the printed record.
-def oauth_login(claude_dir: Path) -> tuple[str, int, str]:
+def credentials_path(claude_dir: Path) -> Path:
+  return claude_dir / ".credentials.json"
+
+
+def read_credentials(claude_dir: Path) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
   try:
-    data = json.loads((claude_dir / ".credentials.json").read_text(encoding="utf-8"))
+    data = json.loads(credentials_path(claude_dir).read_text(encoding="utf-8"))
   except Exception:
-    return "", 0, ""
+    return None, None
+  if not isinstance(data, dict):
+    return None, None
   login = data.get("claudeAiOauth")
   if not isinstance(login, dict):
+    return data, None
+  return data, login
+
+
+def write_credentials(claude_dir: Path, data: dict[str, Any]) -> None:
+  path = credentials_path(claude_dir)
+  handle_fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=path.name + ".", suffix=".tmp")
+  tmp = Path(tmp_name)
+  try:
+    with os.fdopen(handle_fd, "w", encoding="utf-8") as handle:
+      handle.write(json.dumps(data, indent=2) + "\n")
+    try:
+      tmp.chmod(path.stat().st_mode)
+    except OSError:
+      tmp.chmod(0o600)
+    tmp.replace(path)
+  except BaseException:
+    tmp.unlink(missing_ok=True)
+    raise
+
+
+def oauth_login(claude_dir: Path) -> tuple[str, int, str]:
+  _data, login = read_credentials(claude_dir)
+  if not login:
     return "", 0, ""
   plan = plan_label(str(login.get("rateLimitTier") or ""), str(login.get("subscriptionType") or ""))
   return str(login.get("accessToken") or ""), number(login.get("expiresAt")), plan
+
+
+def post_oauth_refresh(refresh_token: str) -> dict[str, Any] | None:
+  body = json.dumps({
+    "grant_type": "refresh_token",
+    "client_id": OAUTH_CLIENT_ID,
+    "refresh_token": refresh_token,
+  }).encode("utf-8")
+  request = urllib.request.Request(
+    OAUTH_TOKEN_URL,
+    data=body,
+    headers={"Content-Type": "application/json", "Accept": "application/json"},
+    method="POST",
+  )
+  with urllib.request.urlopen(request, timeout=10) as response:
+    payload = json.loads(response.read().decode("utf-8", errors="replace"))
+  if not isinstance(payload, dict):
+    return None
+  access = str(payload.get("access_token") or payload.get("accessToken") or "")
+  if not access:
+    return None
+  expires_in = number(payload.get("expires_in") or payload.get("expiresIn") or 28800)
+  if expires_in <= 0:
+    expires_in = 28800
+  fields = {
+    "accessToken": access,
+    "expiresAt": round(time.time() * 1000) + expires_in * 1000,
+  }
+  rotated = str(payload.get("refresh_token") or payload.get("refreshToken") or "")
+  if rotated:
+    fields["refreshToken"] = rotated
+  return fields
+
+
+def refresh_oauth(claude_dir: Path, previous_access: str) -> str:
+  # Refresh tokens are single-use. Lock, re-read, then refresh so a concurrent
+  # Claude Code process that already rotated the token is not overwritten.
+  lock_path = claude_dir / ".credentials.json.lock"
+  lock_path.parent.mkdir(parents=True, exist_ok=True)
+  with lock_path.open("w") as lock:
+    fcntl.flock(lock, fcntl.LOCK_EX)
+    _data, login = read_credentials(claude_dir)
+    if not login:
+      return ""
+    current = str(login.get("accessToken") or "")
+    if current and current != previous_access:
+      return current
+    refresh_token = str(login.get("refreshToken") or "")
+    if not refresh_token:
+      return current
+    try:
+      fields = post_oauth_refresh(refresh_token)
+    except urllib.error.HTTPError:
+      _again, login_again = read_credentials(claude_dir)
+      if login_again:
+        rotated = str(login_again.get("accessToken") or "")
+        if rotated and rotated != previous_access:
+          return rotated
+      return current
+    except Exception:
+      return current
+    if not fields:
+      return current
+    data, login = read_credentials(claude_dir)
+    if not data or not login:
+      return current
+    login.update(fields)
+    data["claudeAiOauth"] = login
+    try:
+      write_credentials(claude_dir, data)
+    except Exception:
+      return str(login.get("accessToken") or current)
+    return str(login.get("accessToken") or current)
 
 
 def plan_label(tier: str, subscription: str) -> str:
@@ -734,7 +839,7 @@ def probe_limits(access_token: str) -> dict[str, Any]:
       ) + ". Local Claude Code stats are still shown."
     else:
       help_text = f"Anthropic's usage endpoint returned status {error.code}. Local Claude Code stats are still shown."
-    return {"ok": False, "helpText": help_text}
+    return {"ok": False, "status": error.code, "helpText": help_text}
   except Exception:
     # A transport failure reached no server at all — no route, no DNS. Any
     # real answer, including an error status, is a server we should stop
@@ -797,7 +902,18 @@ def usable_cached_limits(cached: dict[str, Any]) -> list[dict[str, Any]]:
   return [entry for entry in entries if isinstance(entry, dict) and limit_window_open(entry, now)]
 
 
-def collect_limits(access_token: str, expires_at_ms: int, force: bool) -> dict[str, Any]:
+def fail_limits(result: dict[str, Any], fallback: list[dict[str, Any]], status: str, help_text: str) -> dict[str, Any]:
+  result["limits"] = fallback
+  if fallback:
+    result["usageStatusText"] = ""
+    result["authHelpText"] = ""
+  else:
+    result["usageStatusText"] = status
+    result["authHelpText"] = help_text
+  return result
+
+
+def collect_limits(claude_dir: Path, access_token: str, force: bool) -> dict[str, Any]:
   result = {"limits": [], "usageStatusText": "", "authHelpText": ""}
 
   # A panel that is opened and shut repeatedly must not turn into a request
@@ -807,25 +923,8 @@ def collect_limits(access_token: str, expires_at_ms: int, force: bool) -> dict[s
   cached = read_fresh_json(probe_cache, float("inf")) or {}
   fallback = usable_cached_limits(cached)
 
-  # Probing needs a live token and only the Claude Code CLI can mint one: it
-  # refreshes the credential file when it runs, so a machine left alone long
-  # enough finds the saved token lapsed. Say so — an empty limits list with
-  # nothing else set hides the whole section and explains nothing — and keep
-  # showing the last numbers whose window has not since reset.
   if access_token == "":
-    result["limits"] = fallback
-    result["usageStatusText"] = "Waiting for auth"
-    result["authHelpText"] = AUTH_HELP
-    return result
-  if expires_at_ms > 0 and expires_at_ms <= time.time() * 1000:
-    result["limits"] = fallback
-    result["usageStatusText"] = "Sign-in expired"
-    result["authHelpText"] = (
-      "Claude Code's saved sign-in expired"
-      + (" — showing the last known limits." if fallback else ".")
-      + " Start Claude Code, or run `claude auth login`, to refresh it."
-    )
-    return result
+    return fail_limits(result, fallback, "Waiting for auth", AUTH_HELP)
 
   # --force is a person asking for fresh numbers, so it skips the reuse window
   # entirely; the interval is there to absorb repeated panel opens, not to
@@ -837,6 +936,11 @@ def collect_limits(access_token: str, expires_at_ms: int, force: bool) -> dict[s
     return result
 
   probe = probe_limits(access_token)
+  if probe.get("status") == 401:
+    refreshed = refresh_oauth(claude_dir, access_token)
+    if refreshed:
+      probe = probe_limits(refreshed)
+
   if probe["ok"]:
     result["limits"] = probe["limits"]
     result["authHelpText"] = ""
@@ -847,13 +951,9 @@ def collect_limits(access_token: str, expires_at_ms: int, force: bool) -> dict[s
   # route. Ask the shell to try again sooner than its regular interval.
   if probe.get("transport"):
     result["retryAdvised"] = True
-  if fallback:
-    result["limits"] = fallback
-    result["authHelpText"] = ""
-  else:
-    result["usageStatusText"] = "Claude limits unavailable"
-    result["authHelpText"] = probe["helpText"]
-  return result
+  status = "Sign-in expired" if probe.get("status") == 401 else "Claude limits unavailable"
+  help_text = AUTH_HELP if probe.get("status") == 401 else probe.get("helpText") or AUTH_HELP
+  return fail_limits(result, fallback, status, help_text)
 
 
 # -------------------------------------------------------------------- record
@@ -889,8 +989,8 @@ def main() -> int:
   if opencode is not None:
     stats = merge_stats(stats, opencode)
 
-  access_token, expires_at_ms, plan = oauth_login(claude_dir)
-  limits = collect_limits(access_token, expires_at_ms, args.force)
+  access_token, _expires_at_ms, plan = oauth_login(claude_dir)
+  limits = collect_limits(claude_dir, access_token, args.force)
 
   record = {
     "schemaVersion": 1,

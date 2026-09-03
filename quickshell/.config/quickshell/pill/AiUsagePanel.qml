@@ -27,7 +27,6 @@ PanelWindow {
 
     property double nowMs: Date.now()
     readonly property var limits: Local.AgentUsage.limitWindows(provider)
-    readonly property var models: Local.AgentUsage.modelRows(provider)
     readonly property var headline: Local.AgentUsage.bindingWindow(provider)
     readonly property var balance: provider ? provider.balance : null
     readonly property bool balanceAlarming: !!balance && balance.funded > 0 && (balance.remaining / balance.funded <= 0.1)
@@ -61,46 +60,6 @@ PanelWindow {
 
     function refresh(force) {
         Local.AgentUsage.refreshAll(force === true)
-    }
-
-    function todayDate() {
-        var now = new Date(root.nowMs)
-        return now.getFullYear()
-            + "-" + String(now.getMonth() + 1).padStart(2, "0")
-            + "-" + String(now.getDate()).padStart(2, "0")
-    }
-
-    function dayName(date) {
-        var parsed = new Date(String(date || "") + "T00:00:00")
-        if (isNaN(parsed.getTime())) return String(date || "")
-        return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][parsed.getDay()]
-    }
-
-    function dayLabel(date, isToday) {
-        if (isToday) return "Today"
-        return dayName(date)
-    }
-
-    function dayTooltip(day, isToday) {
-        if (!day) return ""
-        var parsed = new Date(String(day.date) + "T00:00:00")
-        var label = isNaN(parsed.getTime())
-            ? String(day.date)
-            : dayName(day.date) + " " + (parsed.getMonth() + 1) + "/" + parsed.getDate()
-        var text = label + " · " + Local.AgentUsage.formatTokenCount(Number(day.messageCount || 0)) + " tokens"
-        if (isToday && root.provider && root.provider.hasPromptStats !== false) {
-            text += " · " + Number(root.provider.todayPrompts || 0) + " prompts · "
-                + Number(root.provider.todaySessions || 0) + " sessions"
-        }
-        return text
-    }
-
-    function modelTooltip(row) {
-        if (!row) return ""
-        return "In " + Local.AgentUsage.formatTokenCount(row.input)
-            + " · Out " + Local.AgentUsage.formatTokenCount(row.output)
-            + " · Cache Read " + Local.AgentUsage.formatTokenCount(row.cacheRead)
-            + " · Cache Write " + Local.AgentUsage.formatTokenCount(row.cacheWrite)
     }
 
     function resetMsFor(w) {
@@ -320,18 +279,32 @@ PanelWindow {
                                     anchors.centerIn: parent
                                     spacing: 5
 
-                                    Image {
+                                    Item {
                                         anchors.verticalCenter: parent.verticalCenter
-                                        source: "assets/" + chip.modelData.providerId + ".svg"
-                                        sourceSize: Qt.size(12, 12)
                                         width: 12
                                         height: 12
-                                        fillMode: Image.PreserveAspectFit
+
+                                        Image {
+                                            id: chipIcon
+                                            anchors.fill: parent
+                                            source: "assets/" + chip.modelData.providerId + ".svg"
+                                            sourceSize: Qt.size(12, 12)
+                                            fillMode: Image.PreserveAspectFit
+                                            visible: false
+                                        }
+
+                                        MultiEffect {
+                                            anchors.fill: parent
+                                            source: chipIcon
+                                            brightness: 1
+                                            colorization: 1
+                                            colorizationColor: Local.Theme.text
+                                        }
                                     }
 
                                     Text {
                                         anchors.verticalCenter: parent.verticalCenter
-                                        text: chip.modelData.providerName
+                                        text: chip.modelData.shortName || chip.modelData.providerName
                                         color: index === root.providerIndex ? Local.Theme.text : Local.Theme.muted
                                         font.family: Local.Theme.font
                                         font.pixelSize: 11
@@ -351,7 +324,10 @@ PanelWindow {
 
                     // ---------- Status / Auth Alert Banner ----------
                     Rectangle {
-                        visible: !!root.provider && String(root.provider.usageStatusText || root.provider.authHelpText || "") !== ""
+                        visible: !!root.provider
+                            && String(root.provider.usageStatusText || root.provider.authHelpText || "") !== ""
+                            && root.limits.length === 0
+                            && !root.balance
                         width: parent.width
                         implicitHeight: statusCol.implicitHeight + 16
                         radius: 10
@@ -393,7 +369,7 @@ PanelWindow {
                     // ---------- Prepaid Balance Section ----------
                     Rectangle {
                         id: balanceBox
-                        visible: !!root.balance
+                        visible: !!root.balance && !(root.provider && root.provider.providerId === "cursor")
                         width: parent.width
                         implicitHeight: balanceCol.implicitHeight + 20
                         radius: 12
@@ -499,7 +475,14 @@ PanelWindow {
                             spacing: 10
 
                             Text {
-                                text: "LIMITS"
+                                text: {
+                                    if (!root.limits.length) return "LIMITS"
+                                    var group = String(root.limits[0].group || "")
+                                    for (var i = 1; i < root.limits.length; i++) {
+                                        if (String(root.limits[i].group || "") !== group) return "LIMITS"
+                                    }
+                                    return group !== "" ? group : "LIMITS"
+                                }
                                 color: Local.Theme.muted
                                 font.family: Local.Theme.font
                                 font.pixelSize: 10
@@ -524,25 +507,39 @@ PanelWindow {
 
                                         Text {
                                             anchors.left: parent.left
+                                            anchors.right: limitPct.left
+                                            anchors.rightMargin: 8
                                             anchors.verticalCenter: parent.verticalCenter
                                             text: limitRow.modelData ? limitRow.modelData.title : "Limit"
                                             color: Local.Theme.text
                                             font.family: Local.Theme.font
                                             font.pixelSize: 12
                                             font.bold: true
+                                            elide: Text.ElideRight
                                         }
 
                                         Text {
+                                            id: limitPct
                                             anchors.right: parent.right
                                             anchors.verticalCenter: parent.verticalCenter
                                             text: limitRow.modelData && limitRow.modelData.percent >= 0
-                                                ? Math.round(limitRow.modelData.percent * 100) + "%"
+                                                ? Math.round(limitRow.modelData.percent * 100) + "% used"
                                                 : "—"
                                             color: limitRow.rowAlarming ? Local.Theme.danger : Local.Theme.text
                                             font.family: Local.Theme.font
                                             font.pixelSize: 12
                                             font.bold: true
                                         }
+                                    }
+
+                                    Text {
+                                        visible: limitRow.modelData && String(limitRow.modelData.subtitle || "") !== ""
+                                        width: parent.width
+                                        text: limitRow.modelData ? String(limitRow.modelData.subtitle) : ""
+                                        color: Local.Theme.muted
+                                        font.family: Local.Theme.font
+                                        font.pixelSize: 10
+                                        wrapMode: Text.WordWrap
                                     }
 
                                     // Meter track
@@ -567,218 +564,20 @@ PanelWindow {
                                     }
 
                                     Text {
-                                        visible: limitRow.remainingMs > 0
-                                        text: "Resets in " + Local.AgentUsage.formatDuration(limitRow.remainingMs)
+                                        visible: {
+                                            var detail = limitRow.modelData ? String(limitRow.modelData.detail || "") : ""
+                                            return detail !== "" || limitRow.remainingMs > 0
+                                        }
+                                        width: parent.width
+                                        wrapMode: Text.WordWrap
+                                        text: {
+                                            var detail = limitRow.modelData ? String(limitRow.modelData.detail || "") : ""
+                                            if (detail !== "") return detail
+                                            return "Resets in " + Local.AgentUsage.formatDuration(limitRow.remainingMs)
+                                        }
                                         color: Local.Theme.muted
                                         font.family: Local.Theme.font
                                         font.pixelSize: 10
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // ---------- Tokens by Day (7 Days) Section ----------
-                    Rectangle {
-                        id: daysBox
-                        visible: !!root.provider && root.provider.recentDays && root.provider.recentDays.length > 0
-                        width: parent.width
-                        implicitHeight: daysCol.implicitHeight + 20
-                        radius: 12
-                        color: Local.Theme.light ? "#DFC8B1" : "#E6141414"
-                        border.color: Local.Theme.accent
-                        border.width: 1
-
-                        readonly property var days: root.provider ? (root.provider.recentDays || []) : []
-                        readonly property real peak: Math.max(1, Local.AgentUsage.weekPeak(root.provider))
-
-                        Column {
-                            id: daysCol
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.top: parent.top
-                            anchors.margins: 10
-                            spacing: 7
-
-                            Text {
-                                text: "TOKENS BY DAY"
-                                color: Local.Theme.muted
-                                font.family: Local.Theme.font
-                                font.pixelSize: 10
-                                font.bold: true
-                            }
-
-                            Repeater {
-                                model: daysBox.days
-
-                                delegate: Item {
-                                    id: dayRow
-                                    required property var modelData
-                                    required property int index
-                                    width: daysCol.width
-                                    height: 18
-
-                                    readonly property bool isToday: String(dayRow.modelData.date || "") === root.todayDate()
-                                    readonly property real ratio: Math.max(0, Math.min(1, Number(dayRow.modelData.messageCount || 0) / daysBox.peak))
-
-                                    Text {
-                                        id: dayLbl
-                                        anchors.left: parent.left
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        width: 46
-                                        text: root.dayLabel(dayRow.modelData.date, dayRow.isToday)
-                                        color: dayRow.isToday ? Local.Theme.text : Local.Theme.muted
-                                        font.family: Local.Theme.font
-                                        font.pixelSize: 11
-                                        font.bold: dayRow.isToday
-                                    }
-
-                                    Rectangle {
-                                        id: dayMeterTrack
-                                        anchors.left: dayLbl.right
-                                        anchors.right: dayVal.left
-                                        anchors.leftMargin: 8
-                                        anchors.rightMargin: 8
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        height: 6
-                                        radius: 3
-                                        color: Local.Theme.accent
-
-                                        Rectangle {
-                                            anchors.left: parent.left
-                                            anchors.top: parent.top
-                                            anchors.bottom: parent.bottom
-                                            width: parent.width * dayRow.ratio
-                                            radius: 3
-                                            color: dayRow.isToday ? Local.Theme.highlight : Local.Theme.secondaryText
-
-                                            Behavior on width {
-                                                NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
-                                            }
-                                        }
-                                    }
-
-                                    Text {
-                                        id: dayVal
-                                        anchors.right: parent.right
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        width: 50
-                                        horizontalAlignment: Text.AlignRight
-                                        text: Local.AgentUsage.formatTokenCount(dayRow.modelData.messageCount)
-                                        color: dayRow.isToday ? Local.Theme.text : Local.Theme.muted
-                                        font.family: Local.Theme.font
-                                        font.pixelSize: 11
-                                        font.bold: dayRow.isToday
-                                    }
-
-                                    MouseArea {
-                                        id: dayMouse
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                    }
-
-                                    // Simple inline tooltip on hover
-                                    ToolTip {
-                                        visible: dayMouse.containsMouse
-                                        text: root.dayTooltip(dayRow.modelData, dayRow.isToday)
-                                        delay: 150
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // ---------- Tokens by Model Section ----------
-                    Rectangle {
-                        id: modelsBox
-                        visible: root.models.length > 0
-                        width: parent.width
-                        implicitHeight: modelsCol.implicitHeight + 20
-                        radius: 12
-                        color: Local.Theme.light ? "#DFC8B1" : "#E6141414"
-                        border.color: Local.Theme.accent
-                        border.width: 1
-
-                        Column {
-                            id: modelsCol
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.top: parent.top
-                            anchors.margins: 10
-                            spacing: 6
-
-                            Text {
-                                text: "TOKENS BY MODEL"
-                                color: Local.Theme.muted
-                                font.family: Local.Theme.font
-                                font.pixelSize: 10
-                                font.bold: true
-                            }
-
-                            Repeater {
-                                model: root.models
-
-                                delegate: Rectangle {
-                                    id: modelRowItem
-                                    required property var modelData
-                                    required property int index
-                                    width: modelsCol.width
-                                    height: 26
-                                    radius: 7
-                                    color: Local.Theme.light ? "#F5E6D3" : "#E6000000"
-
-                                    readonly property real share: modelRowItem.modelData.total / Math.max(1, root.models[0].total)
-
-                                    // Fill progress bar
-                                    Rectangle {
-                                        anchors.left: parent.left
-                                        anchors.top: parent.top
-                                        anchors.bottom: parent.bottom
-                                        width: parent.width * Math.max(0, Math.min(1, modelRowItem.share))
-                                        radius: 7
-                                        color: Local.Theme.light ? "#DFC8B1" : "#E6141414"
-
-                                        Behavior on width {
-                                            NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
-                                        }
-                                    }
-
-                                    Text {
-                                        anchors.left: parent.left
-                                        anchors.leftMargin: 8
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        anchors.right: modelTokensLbl.left
-                                        anchors.rightMargin: 6
-                                        text: modelRowItem.modelData.name
-                                        color: Local.Theme.text
-                                        font.family: Local.Theme.font
-                                        font.pixelSize: 11
-                                        font.bold: true
-                                        elide: Text.ElideRight
-                                    }
-
-                                    Text {
-                                        id: modelTokensLbl
-                                        anchors.right: parent.right
-                                        anchors.rightMargin: 8
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        text: Local.AgentUsage.formatTokenCount(modelRowItem.modelData.total)
-                                        color: Local.Theme.muted
-                                        font.family: Local.Theme.font
-                                        font.pixelSize: 11
-                                        font.bold: true
-                                    }
-
-                                    MouseArea {
-                                        id: modelMouse
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                    }
-
-                                    ToolTip {
-                                        visible: modelMouse.containsMouse
-                                        text: root.modelTooltip(modelRowItem.modelData)
-                                        delay: 150
                                     }
                                 }
                             }

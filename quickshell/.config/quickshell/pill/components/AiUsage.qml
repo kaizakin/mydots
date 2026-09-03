@@ -85,9 +85,6 @@ Item {
                         if (providerItem.pBalance) {
                             return Local.AgentUsage.formatMoney(providerItem.pBalance.remaining, providerItem.pBalance.currency)
                         }
-                        if (providerItem.modelData.todayTotalTokens > 0) {
-                            return Local.AgentUsage.formatTokenCount(providerItem.modelData.todayTotalTokens)
-                        }
                         if (providerItem.modelData.tierLabel) {
                             return providerItem.modelData.tierLabel
                         }

@@ -287,6 +287,7 @@ Item {
         return {
             providerId: String(record.id),
             providerName: String(record.name || record.id),
+            shortName: shortName(record.id),
             ready: record.ready === true || synced,
             usageStatusText: String(record.usageStatusText || ""),
             authHelpText: String(record.authHelpText || ""),
@@ -721,46 +722,6 @@ Item {
 
     // ---------------------------------------------------------------- format
 
-    function formatTokenCount(n) {
-        var val = Number(n || 0)
-        if (!isFinite(val) || val <= 0) return "0"
-        if (val >= 1e9) return (val / 1e9).toFixed(1).replace(".0", "") + "B"
-        if (val >= 1e6) return (val / 1e6).toFixed(1).replace(".0", "") + "M"
-        if (val >= 1e3) return (val / 1e3).toFixed(1).replace(".0", "") + "K"
-        return String(Math.round(val))
-    }
-
-    function modelWordCase(word) {
-        if (word === "gpt") return "GPT"
-        if (word === "deepseek") return "DeepSeek"
-        if (word === "gemini") return "Gemini"
-        if (word === "claude") return "Claude"
-        return word.charAt(0).toUpperCase() + word.slice(1)
-    }
-
-    function friendlyModelName(id) {
-        if (!id) return "Unknown"
-        var name = String(id).replace(/^claude-/, "").replace(/-\d{8}$/, "")
-        var parts = name.split("-")
-        var words = []
-        var version = []
-        for (var i = 0; i < parts.length; i++) {
-            var part = parts[i]
-            if (part === "") continue
-            if (/^\d/.test(part)) {
-                version.push(part)
-                continue
-            }
-            if (version.length > 0) {
-                words.push(version.join("."))
-                version = []
-            }
-            words.push(modelWordCase(part))
-        }
-        if (version.length > 0) words.push(version.join("."))
-        return words.length > 0 ? words.join(" ") : "Unknown"
-    }
-
     function windowIsLong(text) {
         var t = String(text || "").toLowerCase()
         return t.indexOf("week") >= 0 || t.indexOf("7-day") >= 0 || t.indexOf("seven") >= 0
@@ -787,9 +748,13 @@ Item {
         return plain === "" ? "Limit" : plain
     }
 
-    function limitWindow(label, percent, resetAt, title) {
+    function limitWindow(label, percent, resetAt, title, extra) {
+        extra = extra || ({})
         return {
             title: String(title || "") !== "" ? String(title) : windowTitle(label),
+            subtitle: String(extra.subtitle || ""),
+            detail: String(extra.detail || ""),
+            group: String(extra.group || ""),
             percent: Number(percent),
             resetAt: String(resetAt || "")
         }
@@ -802,7 +767,11 @@ Item {
         for (var i = 0; i < list.length; i++) {
             var entry = list[i] || {}
             var percent = Number(entry.percent)
-            if (percent >= 0) out.push(limitWindow(entry.label, percent, entry.resetsAt, entry.title))
+            if (percent >= 0) out.push(limitWindow(entry.label, percent, entry.resetsAt, entry.title, {
+                subtitle: entry.subtitle,
+                detail: entry.detail,
+                group: entry.group
+            }))
         }
         return out
     }
@@ -840,6 +809,18 @@ Item {
         return currencyPrefix(currency) + amount.toFixed(2)
     }
 
+    function shortName(id) {
+        return ({
+            claude: "claude",
+            codex: "codex",
+            antigravity: "agy",
+            cursor: "cursor",
+            copilot: "copilot",
+            grok: "grok",
+            opencode: "oc"
+        })[String(id || "")] || String(id || "")
+    }
+
     function providerColor(id) {
         return ({
             claude: "#DE7356",
@@ -850,35 +831,5 @@ Item {
             grok: "#8E8E93",
             opencode: "#6E6E73"
         })[id] || Theme.highlight
-    }
-
-    function modelRows(p) {
-        var usageByModel = p ? (p.modelUsage || {}) : {}
-        var rows = []
-        for (var id in usageByModel) {
-            var bucket = usageByModel[id] || {}
-            var input = Number(bucket.inputTokens || 0)
-            var output = Number(bucket.outputTokens || 0)
-            var cacheRead = Number(bucket.cacheReadInputTokens || 0)
-            var cacheWrite = Number(bucket.cacheCreationInputTokens || 0)
-            rows.push({
-                id: id,
-                name: friendlyModelName(id),
-                total: input + output + cacheRead + cacheWrite,
-                input: input,
-                output: output,
-                cacheRead: cacheRead,
-                cacheWrite: cacheWrite
-            })
-        }
-        rows.sort(function(a, b) { return b.total - a.total })
-        return rows.slice(0, 5)
-    }
-
-    function weekPeak(p) {
-        var days = p ? (p.recentDays || []) : []
-        var peak = 0
-        for (var i = 0; i < days.length; i++) peak = Math.max(peak, Number(days[i].messageCount || 0))
-        return peak
     }
 }

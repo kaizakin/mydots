@@ -1,0 +1,466 @@
+#!/usr/bin/python3
+"""Collect Cursor usage into one display-ready JSON record.
+
+Limits come from Cursor's dashboard APIs using the local CLI or desktop
+session. The panel only reads the JSON this prints.
+"""
+
+from __future__ import annotations
+
+import argparse
+import base64
+import datetime as dt
+import fcntl
+import json
+import os
+import sqlite3
+import tempfile
+import time
+import urllib.error
+import urllib.request
+from pathlib import Path
+from typing import Any
+
+AGENT_ID = "cursor"
+AGENT_NAME = "Cursor"
+AUTH_HELP = "Sign in to Cursor, or run `agent login`."
+USAGE_SUMMARY_URL = "https://cursor.com/api/usage-summary"
+PERIOD_USAGE_URL = "https://api2.cursor.sh/aiserver.v1.DashboardService/GetCurrentPeriodUsage"
+PLAN_INFO_URL = "https://api2.cursor.sh/aiserver.v1.DashboardService/GetPlanInfo"
+OAUTH_TOKEN_URL = "https://api2.cursor.sh/oauth/token"
+OAUTH_CLIENT_ID = "KbZUR41cY7W6zRSdpSUJ7I7mLYBKOCmB"
+PROBE_MIN_INTERVAL_SECONDS = 15
+
+
+def cache_root() -> Path:
+  root = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "quickshell" / "agent-usage"
+  root.mkdir(parents=True, exist_ok=True)
+  return root
+
+
+def date_string(value: dt.date) -> str:
+  return value.strftime("%Y-%m-%d")
+
+
+def recent_date_strings() -> list[str]:
+  today = dt.datetime.now().date()
+  return [date_string(today - dt.timedelta(days=offset)) for offset in range(6, -1, -1)]
+
+
+def number(value: Any) -> int:
+  try:
+    n = float(value or 0)
+    return round(n) if n == n else 0
+  except Exception:
+    return 0
+
+
+def empty_stats() -> dict[str, Any]:
+  return {
+    "todayPrompts": 0,
+    "todaySessions": 0,
+    "todayTotalTokens": 0,
+    "todayTokensByModel": {},
+    "recentDays": [{"date": day, "messageCount": 0} for day in recent_date_strings()],
+    "totalPrompts": 0,
+    "totalSessions": 0,
+    "activeDays": 0,
+    "activeDates": [],
+    "modelUsage": {},
+  }
+
+
+def read_fresh_json(path: Path, max_age_seconds: float) -> dict[str, Any] | None:
+  if max_age_seconds <= 0 or not path.exists():
+    return None
+  try:
+    if time.time() - path.stat().st_mtime <= max_age_seconds:
+      return json.loads(path.read_text(encoding="utf-8"))
+  except Exception:
+    return None
+  return None
+
+
+def write_json(path: Path, payload: dict[str, Any]) -> None:
+  handle_fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=path.name + ".", suffix=".tmp")
+  tmp = Path(tmp_name)
+  try:
+    with os.fdopen(handle_fd, "w", encoding="utf-8") as handle:
+      handle.write(json.dumps(payload, separators=(",", ":"), sort_keys=True) + "\n")
+    tmp.chmod(0o644)
+    tmp.replace(path)
+  except BaseException:
+    tmp.unlink(missing_ok=True)
+    raise
+
+
+def b64url_json(segment: str) -> dict[str, Any]:
+  padded = segment + "=" * ((4 - len(segment) % 4) % 4)
+  parsed = json.loads(base64.urlsafe_b64decode(padded.encode("ascii")))
+  return parsed if isinstance(parsed, dict) else {}
+
+
+def jwt_claims(token: str) -> dict[str, Any]:
+  parts = token.split(".")
+  if len(parts) < 2:
+    return {}
+  try:
+    return b64url_json(parts[1])
+  except Exception:
+    return {}
+
+
+def jwt_expired(token: str) -> bool:
+  exp = number(jwt_claims(token).get("exp"))
+  return exp > 0 and exp <= time.time()
+
+
+def cookie_user_id(token: str) -> str:
+  sub = str(jwt_claims(token).get("sub") or "")
+  return sub.split("|", 1)[-1] if sub else ""
+
+
+def desktop_state_db() -> Path | None:
+  xdg = Path(os.environ.get("XDG_CONFIG_HOME") or (Path.home() / ".config"))
+  for name in ("Cursor", "cursor"):
+    candidate = xdg / name / "User" / "globalStorage" / "state.vscdb"
+    if candidate.is_file():
+      return candidate
+  return None
+
+
+def read_vscdb_auth(path: Path) -> tuple[str, str]:
+  try:
+    conn = sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True, timeout=2)
+  except sqlite3.Error:
+    return "", ""
+  try:
+    conn.execute("PRAGMA query_only = ON")
+    rows = dict(conn.execute("SELECT key, value FROM ItemTable WHERE key LIKE 'cursorAuth/%'"))
+  except sqlite3.Error:
+    return "", ""
+  finally:
+    conn.close()
+  access = str(rows.get("cursorAuth/accessToken") or "")
+  refresh = str(rows.get("cursorAuth/refreshToken") or "")
+  return access, refresh
+
+
+def cli_auth_path() -> Path:
+  xdg = Path(os.environ.get("XDG_CONFIG_HOME") or (Path.home() / ".config"))
+  return xdg / "cursor" / "auth.json"
+
+
+def read_cli_auth() -> tuple[str, str]:
+  try:
+    data = json.loads(cli_auth_path().read_text(encoding="utf-8"))
+  except Exception:
+    return "", ""
+  if not isinstance(data, dict):
+    return "", ""
+  return str(data.get("accessToken") or ""), str(data.get("refreshToken") or "")
+
+
+def write_cli_auth(access: str, refresh: str) -> None:
+  path = cli_auth_path()
+  path.parent.mkdir(parents=True, exist_ok=True)
+  data: dict[str, Any] = {}
+  try:
+    existing = json.loads(path.read_text(encoding="utf-8"))
+    if isinstance(existing, dict):
+      data = existing
+  except Exception:
+    pass
+  data["accessToken"] = access
+  if refresh:
+    data["refreshToken"] = refresh
+  handle_fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=path.name + ".", suffix=".tmp")
+  tmp = Path(tmp_name)
+  try:
+    with os.fdopen(handle_fd, "w", encoding="utf-8") as handle:
+      handle.write(json.dumps(data, indent=2) + "\n")
+    try:
+      tmp.chmod(path.stat().st_mode)
+    except OSError:
+      tmp.chmod(0o600)
+    tmp.replace(path)
+  except BaseException:
+    tmp.unlink(missing_ok=True)
+    raise
+
+
+def load_auth() -> tuple[str, str, str]:
+  db = desktop_state_db()
+  if db is not None:
+    access, refresh = read_vscdb_auth(db)
+    if access:
+      return access, refresh, "vscdb"
+  access, refresh = read_cli_auth()
+  return access, refresh, "cli" if access else ""
+
+
+def persist_auth(source: str, access: str, refresh: str) -> None:
+  if source == "cli" or source == "":
+    try:
+      write_cli_auth(access, refresh)
+    except Exception:
+      pass
+
+
+def post_oauth_refresh(refresh_token: str) -> tuple[str, str]:
+  body = json.dumps({
+    "grant_type": "refresh_token",
+    "client_id": OAUTH_CLIENT_ID,
+    "refresh_token": refresh_token,
+  }).encode("utf-8")
+  request = urllib.request.Request(
+    OAUTH_TOKEN_URL,
+    data=body,
+    headers={"Content-Type": "application/json", "Accept": "application/json"},
+    method="POST",
+  )
+  with urllib.request.urlopen(request, timeout=10) as response:
+    payload = json.loads(response.read().decode("utf-8", errors="replace"))
+  if not isinstance(payload, dict) or payload.get("shouldLogout") is True:
+    return "", refresh_token
+  access = str(payload.get("access_token") or payload.get("accessToken") or "")
+  rotated = str(payload.get("refresh_token") or payload.get("refreshToken") or "") or refresh_token
+  return access, rotated
+
+
+def refresh_auth(access: str, refresh: str, source: str) -> tuple[str, str]:
+  if not refresh:
+    return access, refresh
+  lock_path = cache_root() / "cursor-auth.lock"
+  with lock_path.open("w") as lock:
+    fcntl.flock(lock, fcntl.LOCK_EX)
+    current_access, current_refresh, current_source = load_auth()
+    if current_access and current_access != access and not jwt_expired(current_access):
+      return current_access, current_refresh or refresh
+    try:
+      new_access, new_refresh = post_oauth_refresh(current_refresh or refresh)
+    except Exception:
+      return access, refresh
+    if not new_access:
+      return access, refresh
+    persist_auth(current_source or source, new_access, new_refresh)
+    return new_access, new_refresh
+
+
+def http_json(url: str, headers: dict[str, str], data: bytes | None = None) -> dict[str, Any]:
+  request = urllib.request.Request(url, data=data, headers=headers, method="POST" if data is not None else "GET")
+  try:
+    with urllib.request.urlopen(request, timeout=12) as response:
+      payload = json.loads(response.read().decode("utf-8", errors="replace"))
+      return {"ok": True, "status": response.status, "payload": payload if isinstance(payload, dict) else {}}
+  except urllib.error.HTTPError as error:
+    body = ""
+    try:
+      body = error.read().decode("utf-8", errors="replace")[:200]
+    except Exception:
+      pass
+    return {"ok": False, "status": error.code, "payload": {}, "bodySnippet": body}
+  except Exception as exc:
+    return {"ok": False, "status": 0, "payload": {}, "transport": True, "errorType": type(exc).__name__}
+
+
+def fetch_usage_summary(token: str) -> dict[str, Any]:
+  user_id = cookie_user_id(token)
+  cookie = f"WorkosCursorSessionToken={user_id}::{token}"
+  return http_json(
+    USAGE_SUMMARY_URL,
+    {"Cookie": cookie, "Accept": "application/json", "Origin": "https://cursor.com"},
+  )
+
+
+def fetch_period_usage(token: str) -> dict[str, Any]:
+  headers = {
+    "Authorization": "Bearer " + token,
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+    "Connect-Protocol-Version": "1",
+  }
+  return http_json(PERIOD_USAGE_URL, headers, b"{}")
+
+
+def fetch_plan_info(token: str) -> str:
+  headers = {
+    "Authorization": "Bearer " + token,
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+    "Connect-Protocol-Version": "1",
+  }
+  result = http_json(PLAN_INFO_URL, headers, b"{}")
+  payload = result.get("payload") or {}
+  info = payload.get("planInfo") if isinstance(payload.get("planInfo"), dict) else payload
+  if isinstance(info, dict):
+    return str(info.get("planName") or info.get("membershipType") or "")
+  return ""
+
+
+def as_percent(value: Any) -> float:
+  try:
+    n = float(value)
+  except (TypeError, ValueError):
+    return -1.0
+  if n != n or n < 0:
+    return -1.0
+  return min(1.0, n / 100.0) if n > 1 else min(1.0, n)
+
+
+def window(label: str, percent: float, resets_at: str, **extra: Any) -> dict[str, Any] | None:
+  if percent < 0:
+    return None
+  entry = {"label": label, "title": extra.get("title") or label, "percent": percent, "resetsAt": resets_at}
+  for key in ("subtitle", "detail", "group"):
+    value = extra.get(key)
+    if value:
+      entry[key] = value
+  return entry
+
+
+def parse_usage(payload: dict[str, Any]) -> dict[str, Any]:
+  result: dict[str, Any] = {"limits": [], "tierLabel": "", "balance": None}
+  if not payload:
+    return result
+
+  tier = str(payload.get("membershipType") or payload.get("planName") or "")
+  result["tierLabel"] = tier
+  resets_at = str(payload.get("billingCycleEnd") or "")
+  if resets_at.isdigit():
+    try:
+      resets_at = dt.datetime.fromtimestamp(int(resets_at) / (1000 if int(resets_at) > 1e12 else 1), dt.timezone.utc).isoformat()
+    except Exception:
+      pass
+
+  individual = payload.get("individualUsage") if isinstance(payload.get("individualUsage"), dict) else {}
+  plan = individual.get("plan") if isinstance(individual.get("plan"), dict) else {}
+  plan_usage = payload.get("planUsage") if isinstance(payload.get("planUsage"), dict) else plan
+
+  auto = as_percent(plan_usage.get("autoPercentUsed")) if isinstance(plan_usage, dict) else -1.0
+  api = as_percent(plan_usage.get("apiPercentUsed")) if isinstance(plan_usage, dict) else -1.0
+
+  group = "Included in " + (tier[:1].upper() + tier[1:] if tier else "plan")
+  if auto >= 0:
+    result["limits"].append(window(
+      "Cursor Models",
+      auto,
+      resets_at,
+      title="Cursor Models",
+      subtitle="Includes Cursor Grok and Composer",
+      detail="Additional usage beyond limits consumes Other Models quota or on-demand spend.",
+      group=group,
+    ))
+  if api >= 0:
+    result["limits"].append(window(
+      "Other Models",
+      api,
+      resets_at,
+      title="Other Models",
+      detail="Additional usage beyond limits consumes on-demand spend.",
+      group=group,
+    ))
+  if not result["limits"] and isinstance(plan_usage, dict):
+    total = as_percent(plan_usage.get("totalPercentUsed"))
+    entry = window("Plan", total, resets_at, title="Plan", group=group)
+    if entry:
+      result["limits"].append(entry)
+  return result
+
+
+def fail_limits(fallback: dict[str, Any], status: str, help_text: str) -> dict[str, Any]:
+  if fallback.get("limits"):
+    return fallback
+  return {"limits": [], "tierLabel": fallback.get("tierLabel") or "", "balance": fallback.get("balance"), "usageStatusText": status, "authHelpText": help_text}
+
+
+def collect_limits(force: bool) -> dict[str, Any]:
+  empty = {"limits": [], "tierLabel": "", "balance": None, "usageStatusText": "", "authHelpText": ""}
+  probe_cache = cache_root() / "cursor-limits.json"
+  cached = read_fresh_json(probe_cache, float("inf")) or {}
+  fallback_limits = cached.get("limits") if isinstance(cached.get("limits"), list) else []
+  fallback = {
+    "limits": fallback_limits,
+    "tierLabel": str(cached.get("tierLabel") or ""),
+    "balance": cached.get("balance") if isinstance(cached.get("balance"), dict) else None,
+    "usageStatusText": "",
+    "authHelpText": "",
+  }
+
+  access, refresh, source = load_auth()
+  if not access:
+    return fail_limits(fallback, "Waiting for auth", AUTH_HELP)
+
+  if jwt_expired(access):
+    access, refresh = refresh_auth(access, refresh, source)
+
+  fetched_at = number(cached.get("fetchedAtMs")) / 1000
+  if fallback_limits and not force and time.time() - fetched_at < PROBE_MIN_INTERVAL_SECONDS:
+    return fallback
+
+  summary = fetch_usage_summary(access)
+  if summary.get("status") == 401:
+    access, refresh = refresh_auth(access, refresh, source)
+    summary = fetch_usage_summary(access)
+
+  parsed = parse_usage(summary.get("payload") or {}) if summary.get("ok") else {"limits": [], "tierLabel": "", "balance": None}
+
+  if not parsed["limits"]:
+    period = fetch_period_usage(access)
+    if period.get("status") == 401:
+      access, refresh = refresh_auth(access, refresh, source)
+      period = fetch_period_usage(access)
+    if period.get("ok"):
+      parsed = parse_usage(period.get("payload") or {})
+    elif period.get("transport"):
+      empty["retryAdvised"] = True
+
+  if parsed.get("limits"):
+    if not parsed.get("tierLabel"):
+      parsed["tierLabel"] = fetch_plan_info(access) or fallback.get("tierLabel") or ""
+    parsed["usageStatusText"] = ""
+    parsed["authHelpText"] = ""
+    write_json(probe_cache, {
+      "fetchedAtMs": round(time.time() * 1000),
+      "limits": parsed["limits"],
+      "tierLabel": parsed.get("tierLabel") or "",
+      "balance": None,
+    })
+    return parsed
+
+  status = "Waiting for auth" if summary.get("status") in (401, 403) else "Cursor limits unavailable"
+  help_text = AUTH_HELP if summary.get("status") in (401, 403) else "Could not read Cursor usage. Local sign-in may be stale."
+  failed = fail_limits(fallback, status, help_text)
+  if summary.get("transport") or empty.get("retryAdvised"):
+    failed["retryAdvised"] = True
+  return failed
+
+
+def main() -> int:
+  parser = argparse.ArgumentParser()
+  parser.add_argument("--force", action="store_true")
+  parser.add_argument("--limits-only", action="store_true")
+  args = parser.parse_args()
+  limits = collect_limits(args.force)
+
+  record = {
+    "schemaVersion": 1,
+    "id": AGENT_ID,
+    "name": AGENT_NAME,
+    "updatedAt": dt.datetime.now(dt.timezone.utc).isoformat(),
+    "ready": bool(limits.get("limits")),
+    "hasLocalStats": True,
+    "tierLabel": limits.get("tierLabel") or "",
+    "usageStatusText": limits.get("usageStatusText") or "",
+    "authHelpText": limits.get("authHelpText") or "",
+    "limits": limits.get("limits") or [],
+  }
+  if limits.get("retryAdvised"):
+    record["retryAdvised"] = True
+  record.update(empty_stats())
+  print(json.dumps(record, separators=(",", ":"), sort_keys=True))
+  return 0
+
+
+if __name__ == "__main__":
+  raise SystemExit(main())

@@ -1,6 +1,7 @@
 // autostart
 // spawn-at-startup "noctalia"
 spawn-at-startup "quickshell"
+spawn-at-startup "swaync"
 spawn-at-startup "vicinae" "server"
 spawn-at-startup "awww-daemon"
 spawn-at-startup "dbus-update-activation-environment" "--systemd" "WAYLAND_DISPLAY" "XDG_CURRENT_DESKTOP"

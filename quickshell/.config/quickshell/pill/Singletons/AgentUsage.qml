@@ -785,6 +785,49 @@ Item {
         return best
     }
 
+    function sessionWindow(p) {
+        var windows = limitWindows(p)
+        for (var i = 0; i < windows.length; i++) {
+            var w = windows[i]
+            var t = String(w.title || "").toLowerCase()
+            var l = String(w.label || "").toLowerCase()
+            if (t === "session" || l.indexOf("session") >= 0 || l.indexOf("5-hour") >= 0 || l.indexOf("5h") >= 0) {
+                return w
+            }
+        }
+        return null
+    }
+
+    function weeklyWindow(p) {
+        var windows = limitWindows(p)
+        for (var i = 0; i < windows.length; i++) {
+            var w = windows[i]
+            var t = String(w.title || "").toLowerCase()
+            var l = String(w.label || "").toLowerCase()
+            if (t === "weekly" || l.indexOf("week") >= 0 || l.indexOf("7-day") >= 0 || l.indexOf("7d") >= 0) {
+                return w
+            }
+        }
+        return null
+    }
+
+    function resetMsFor(w, nowMs) {
+        if (!w || !w.resetAt) return -1
+        var ms = new Date(w.resetAt).getTime()
+        var now = (nowMs && nowMs > 0) ? nowMs : Date.now()
+        return isFinite(ms) ? ms - now : -1
+    }
+
+    function formatDurationShort(ms) {
+        if (!(ms > 0)) return ""
+        var minutes = Math.floor(ms / 60000)
+        var hours = Math.floor(minutes / 60)
+        var days = Math.floor(hours / 24)
+        if (days > 0) return days + "d"
+        if (hours > 0) return hours + "h"
+        return Math.max(1, minutes) + "m"
+    }
+
     function formatDuration(ms) {
         if (!(ms > 0)) return "now"
         var minutes = Math.floor(ms / 60000)

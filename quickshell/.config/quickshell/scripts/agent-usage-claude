@@ -864,11 +864,11 @@ def probe_limits(access_token: str) -> dict[str, Any]:
   if session is not None:
     percent = normalize_utilization(session.get("utilization"), percent_scale)
     if percent >= 0:
-      limits.append({"label": "Session (5-hour)", "percent": percent, "resetsAt": normalize_reset_at(session.get("resets_at"))})
+      limits.append({"label": "Session (5-hour)", "title": "Session", "percent": percent, "resetsAt": normalize_reset_at(session.get("resets_at"))})
   if weekly is not None:
     percent = normalize_utilization(weekly.get("utilization"), percent_scale)
     if percent >= 0:
-      limits.append({"label": "Weekly (7-day)", "percent": percent, "resetsAt": normalize_reset_at(weekly.get("resets_at"))})
+      limits.append({"label": "Weekly (7-day)", "title": "Weekly", "percent": percent, "resetsAt": normalize_reset_at(weekly.get("resets_at"))})
   limits.extend(scoped_limits(payload, percent_scale))
 
   if not limits:

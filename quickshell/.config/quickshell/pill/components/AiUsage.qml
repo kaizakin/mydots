@@ -7,7 +7,14 @@ import "../Singletons" as Local
 Item {
     id: root
 
-    readonly property var providers: Local.AgentUsage.enabledProviders
+    readonly property var providers: {
+        var all = Local.AgentUsage.enabledProviders
+        var barAllowed = Local.Settings.aiUsageBarProviders || ""
+        if (barAllowed === "") return all
+        var list = barAllowed.split(",").map(s => s.trim()).filter(s => s.length > 0)
+        if (list.length === 0) return all
+        return all.filter(p => list.includes(p.providerId))
+    }
     readonly property var currentProvider: Local.AgentUsage.selectedProvider
 
     readonly property var headline: Local.AgentUsage.bindingWindow(currentProvider)
@@ -35,8 +42,10 @@ Item {
                 required property int index
 
                 readonly property var pHeadline: Local.AgentUsage.bindingWindow(modelData)
+                readonly property var pSession: Local.AgentUsage.sessionWindow(modelData)
                 readonly property var pBalance: modelData.balance
-                readonly property bool pAlarming: (!!pHeadline && pHeadline.percent >= 0.9) || (!!pBalance && pBalance.funded > 0 && pBalance.remaining / pBalance.funded <= 0.1)
+                readonly property var pLimit: (modelData.providerId === "claude" && pSession && pSession.percent >= 0) ? pSession : pHeadline
+                readonly property bool pAlarming: (!!pLimit && pLimit.percent >= 0.9) || (!!pBalance && pBalance.funded > 0 && pBalance.remaining / pBalance.funded <= 0.1)
                 readonly property bool isSelected: index === Local.AgentUsage.selectedProviderIndex
 
                 spacing: 4
@@ -79,8 +88,8 @@ Item {
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: {
-                        if (providerItem.pHeadline && providerItem.pHeadline.percent >= 0) {
-                            return Math.round(providerItem.pHeadline.percent * 100) + "%"
+                        if (providerItem.pLimit && providerItem.pLimit.percent >= 0) {
+                            return Math.round(providerItem.pLimit.percent * 100) + "%"
                         }
                         if (providerItem.pBalance) {
                             return Local.AgentUsage.formatMoney(providerItem.pBalance.remaining, providerItem.pBalance.currency)

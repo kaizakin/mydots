@@ -51,39 +51,6 @@ find_bin() {
   return 1
 }
 
-warmup_one() {
-  local agent="$1" bin=""
-  case "$agent" in
-  cursor)
-    bin=$(find_bin agent cursor-agent) || bin=""
-    [[ -z $bin && -x /opt/cursor-agent/cursor-agent ]] && bin=/opt/cursor-agent/cursor-agent
-    [[ -n $bin ]] && timeout 25 "$bin" --list-models >/dev/null 2>&1 || true
-    ;;
-  claude)
-    bin=$(find_bin claude) || bin=""
-    [[ -n $bin ]] && timeout 25 "$bin" auth status >/dev/null 2>&1 || true
-    ;;
-  codex)
-    bin=$(find_bin codex) || bin=""
-    [[ -n $bin ]] && timeout 20 "$bin" --version >/dev/null 2>&1 || true
-    ;;
-  esac
-}
-
-warmup() {
-  (( force == 1 )) || return 0
-  local pids=() agent
-  for agent in cursor claude codex; do
-    wanted "$agent" || continue
-    warmup_one "$agent" &
-    pids+=($!)
-  done
-  local pid
-  for pid in "${pids[@]}"; do
-    wait "$pid" || true
-  done
-}
-
 collect() {
   local collector="$1" agent="$2"
   local record tmp
@@ -97,7 +64,6 @@ collect() {
 }
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-warmup
 
 pids=()
 
